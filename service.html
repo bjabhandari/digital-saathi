@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Service | Digital Saathi</title>
+  <meta name="description" content="Graphic design, video editing and Facebook boost services by Digital Saathi.">
+  <meta name="theme-color" content="#7cc15a">
+  <link rel="icon" href="assets/img/favicon.png" type="image/png">
+  <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&family=Oswald:wght@400;500;600&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+<main data-service-detail></main>
+
+<template id="calc-template">
+  <section class="section" id="calculator">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="eyebrow">Boost calculator</span>
+        <h2 class="h-section">How many people can <span class="hl">you reach?</span></h2>
+        <p>Move the sliders to estimate your Facebook &amp; Instagram boost results and price in NPR.</p>
+      </div>
+      <form class="calc reveal" data-boost-calc>
+        <div class="calc-controls">
+          <div class="calc-row">
+            <div class="top"><label for="b-budget">Ad budget</label><output data-out="budget">$20</output></div>
+            <input id="b-budget" type="range" name="budget" min="5" max="500" step="5" value="20">
+          </div>
+          <div class="calc-row">
+            <div class="top"><label for="b-days">Duration</label><output data-out="days">7 days</output></div>
+            <input id="b-days" type="range" name="days" min="1" max="30" step="1" value="7">
+          </div>
+          <div class="calc-row mb-0">
+            <div class="top"><span id="b-goal">Campaign goal</span></div>
+            <div class="seg" role="radiogroup" aria-labelledby="b-goal">
+              <label><input type="radio" name="objective" value="messages" checked><span>💬 Messages</span></label>
+              <label><input type="radio" name="objective" value="likes"><span>👍 Page likes</span></label>
+              <label><input type="radio" name="objective" value="engagement"><span>❤️ Engagement</span></label>
+              <label><input type="radio" name="objective" value="views"><span>▶️ Video views</span></label>
+            </div>
+          </div>
+        </div>
+        <div class="calc-result" aria-live="polite">
+          <span class="eyebrow" style="margin-bottom:0">Estimated reach</span>
+          <div class="calc-big"><span data-out="big">0</span><small style="font-size:1.1rem;color:#9db5a4"> people</small></div>
+          <div class="calc-kv"><span>Reach range</span><b data-out="reach"></b></div>
+          <div class="calc-kv"><span>Expected results</span><b data-out="results"></b></div>
+          <div class="calc-kv"><span>Per day</span><b data-out="daily"></b></div>
+          <div class="calc-kv" style="font-size:1.1rem"><span>Total price</span><b data-out="total" style="color:var(--lime)"></b></div>
+          <a class="btn btn--lime btn--block" style="margin-top:18px" data-boost-order target="_blank" rel="noopener" href="#">Boost Now via WhatsApp</a>
+          <p class="form-note" style="color:#7f9887;margin-bottom:0">Estimates based on typical Nepal audiences. Actual results vary by content and targeting.</p>
+        </div>
+      </form>
+    </div>
+  </section>
+</template>
+
+<script src="assets/js/data.js"></script>
+<script src="assets/js/main.js"></script>
+<script src="assets/js/pages.js"></script>
+</body>
+</html>

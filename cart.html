@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Your Cart | Digital Saathi</title>
+  <meta name="description" content="Review your courses and editing tools and check out with eSewa, Khalti or bank transfer.">
+  <meta name="theme-color" content="#7cc15a">
+  <link rel="icon" href="assets/img/favicon.png" type="image/png">
+  <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&family=Oswald:wght@400;500;600&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+<main>
+  <section class="page-hero">
+    <div class="container">
+      <div class="crumbs"><a href="index.html">Home</a> / Cart</div>
+      <h1 class="h-section">Your <span class="hl">cart</span></h1>
+      <p>Review your items and place your order. Pay with eSewa, Khalti, Fonepay or bank transfer.</p>
+    </div>
+  </section>
+
+  <section class="section" style="padding-top:48px">
+    <div class="container">
+      <div class="empty" data-order-done hidden style="border-color:#bbf7d0;background:#f0fdf4;color:var(--ink);margin-bottom:24px">
+        <p style="font-size:1.15rem;font-weight:800;margin-bottom:6px">🎉 Order sent!</p>
+        <p class="mb-0 muted">We've opened WhatsApp with your order details. Send the message and we'll share payment details and your access right away.</p>
+      </div>
+      <div class="cart-grid">
+        <div data-cart-items></div>
+        <form class="form-card" data-checkout hidden>
+          <h3>Order summary</h3>
+          <div data-cart-summary style="margin-bottom:20px"></div>
+          <div class="field"><label for="o-name">Full name</label><input id="o-name" name="name" required></div>
+          <div class="form-row">
+            <div class="field"><label for="o-phone">Phone</label><input id="o-phone" name="phone" type="tel" required></div>
+            <div class="field"><label for="o-email">Email</label><input id="o-email" name="email" type="email" required></div>
+          </div>
+          <div class="field">
+            <label>Payment method</label>
+            <div class="pay-options">
+              <label class="pay-option"><input type="radio" name="payment" value="eSewa" checked><span>eSewa</span></label>
+              <label class="pay-option"><input type="radio" name="payment" value="Khalti"><span>Khalti</span></label>
+              <label class="pay-option"><input type="radio" name="payment" value="Bank / Fonepay"><span>Bank / QR</span></label>
+            </div>
+          </div>
+          <button class="btn btn--primary btn--block">Place Order</button>
+          <p class="form-note">We'll confirm your order on WhatsApp and send you payment details. You get access right after payment.</p>
+        </form>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script src="assets/js/data.js"></script>
+<script src="assets/js/main.js"></script>
+</body>
+</html>

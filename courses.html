@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>All Courses | Digital Saathi</title>
+  <meta name="description" content="Browse graphic design, video editing, motion graphics and digital marketing courses taught by expert teachers in Nepal.">
+  <meta name="theme-color" content="#7cc15a">
+  <link rel="icon" href="assets/img/favicon.png" type="image/png">
+  <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&family=Oswald:wght@400;500;600&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+<main>
+  <section class="page-hero">
+    <div class="container">
+      <div class="crumbs"><a href="index.html">Home</a> / Courses</div>
+      <h1 class="h-section">Explore our <span class="hl">courses</span></h1>
+      <p>Practical, project-based courses in design, video and marketing. Lifetime access, certificates and real support from your teacher.</p>
+    </div>
+  </section>
+
+  <section class="section" style="padding-top:48px">
+    <div class="container">
+      <div class="toolbar">
+        <div class="search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          <label class="sr-only" for="course-search">Search courses</label>
+          <input id="course-search" type="search" placeholder="Search courses, skills or teachers…" data-course-search>
+        </div>
+        <label class="sr-only" for="course-level">Level</label>
+        <select id="course-level" class="input" style="width:auto" data-course-level>
+          <option value="All">All levels</option>
+          <option>Beginner</option>
+          <option>Intermediate</option>
+        </select>
+        <label class="sr-only" for="course-sort">Sort</label>
+        <select id="course-sort" class="input" style="width:auto" data-course-sort>
+          <option value="popular">Most popular</option>
+          <option value="rating">Highest rated</option>
+          <option value="price-asc">Price: low to high</option>
+          <option value="price-desc">Price: high to low</option>
+        </select>
+      </div>
+      <div class="flex wrap" style="justify-content:space-between;align-items:center;gap:12px;margin-bottom:24px">
+        <div class="chips" data-course-chips></div>
+        <span class="muted" style="font-weight:600;font-size:.9rem" data-course-count></span>
+      </div>
+      <div class="grid grid-3" data-course-grid></div>
+    </div>
+  </section>
+
+  <section style="padding:0 0 88px">
+    <div class="container">
+      <div class="cta-band reveal">
+        <div>
+          <h2>Are you an expert? <span class="hl">Teach with us.</span></h2>
+          <p>Share your skills with thousands of learners and earn from every enrollment.</p>
+        </div>
+        <div class="actions"><a href="teachers.html#apply" class="btn btn--lime">Become a Teacher</a></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script src="assets/js/data.js"></script>
+<script src="assets/js/main.js"></script>
+</body>
+</html>
