@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Track Your Order | Digital Saathi</title>
+  <meta name="description" content="Follow your Digital Saathi order step by step, from payment to delivery.">
+  <meta name="theme-color" content="#7cc15a">
+  <link rel="icon" href="assets/img/favicon.png" type="image/png">
+  <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&family=Oswald:wght@400;500;600&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+<main>
+  <section class="page-hero">
+    <div class="container">
+      <div class="crumbs"><a href="index.html">Home</a> / Track Order</div>
+      <h1 class="h-section">Track your <span class="hl">order</span></h1>
+      <p>See exactly where your order is: payment, work in progress, review and delivery.</p>
+    </div>
+  </section>
+
+  <section class="section" style="padding-top:48px">
+    <div class="container track-grid">
+      <div>
+        <form class="form-card" data-track-form novalidate>
+          <h3>Find your order</h3>
+          <div class="field"><label for="t-id">Order ID</label><input id="t-id" name="id" placeholder="DS-AB12CD" required autocomplete="off" style="text-transform:uppercase"></div>
+          <div class="field"><label for="t-phone">Phone number used for the order</label><input id="t-phone" name="phone" type="tel" required></div>
+          <button class="btn btn--primary btn--block">Track Order</button>
+          <p class="form-note">Your order ID is shown after checkout and in our WhatsApp message.</p>
+        </form>
+        <div data-my-orders></div>
+      </div>
+      <div data-track-result>
+        <div class="track-card track-empty">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16.5 9.4 7.5 4.2"/><path d="M21 16V8a2 2 0 0 0-1-1.7l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.7l7 4a2 2 0 0 0 2 0l7-4a2 2 0 0 0 1-1.7z"/><path d="M3.3 7 12 12l8.7-5M12 22V12"/></svg>
+          <h3 style="margin-top:14px">Enter your order ID to see its progress</h3>
+          <p class="mb-0">Questions? <a href="#" data-open-chat style="color:var(--brand-700);font-weight:600">Ask our help chat</a> or <a href="#" data-wa="Namaste! I have a question about my order." target="_blank" rel="noopener" style="color:var(--brand-700);font-weight:600">WhatsApp us</a>.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script src="assets/js/data.js"></script>
+<script src="assets/js/main.js"></script>
+<script src="assets/js/pages.js"></script>
+<script src="assets/js/chat.js"></script>
+</body>
+</html>

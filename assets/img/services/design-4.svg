@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600"><defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#dfe9f7"/><stop offset="1" stop-color="#aec6ea"/></linearGradient><filter id="sh" x="-20%" y="-20%" width="140%" height="150%"><feDropShadow dx="0" dy="14" stdDeviation="14" flood-color="#06140a" flood-opacity=".35"/></filter></defs>
+<rect width="800" height="600" fill="url(#bg)"/>
+<g filter="url(#sh)"><rect x="60" y="160" width="680" height="280" rx="18" fill="#0f2b52"/></g>
+<path d="M60 380 740 250V440a18 18 0 0 1-18 18H78a18 18 0 0 1-18-18z" fill="#f2b631"/>
+<path d="M60 410 740 290V440a18 18 0 0 1-18 18H78a18 18 0 0 1-18-18z" fill="#fff" opacity=".2"/>
+<text x="100" y="250" font-family="Oswald, 'Arial Narrow', Arial, sans-serif" font-size="58" fill="#fff" font-weight="700" text-anchor="start">ADMISSION OPEN</text>
+<text x="102" y="300" font-family="Outfit, 'Segoe UI', Arial, sans-serif" font-size="24" fill="#f2b631" font-weight="600" text-anchor="start">+2 Science · Management · BBS</text>
+<g transform="translate(560 210)"><path d="M0 40 70 10l70 30-70 30z" fill="#f2b631"/><path d="M30 55v30c20 16 60 16 80 0V55L70 70z" fill="#fff"/><path d="M140 40v44" stroke="#f2b631" stroke-width="5"/><circle cx="140" cy="90" r="7" fill="#f2b631"/></g>
+<text x="620" y="420" font-family="Oswald, 'Arial Narrow', Arial, sans-serif" font-size="26" fill="#0f2b52" font-weight="700" text-anchor="middle">2083 BATCH</text></svg>

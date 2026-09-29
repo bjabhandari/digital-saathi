@@ -115,7 +115,7 @@
             "</div>" +
             '<div class="svc-stats fade-up d4">' + s.stats.map((x) => "<div><b>" + x[0] + "</b><span>" + x[1] + "</span></div>").join("") + "</div>" +
           "</div>" +
-          '<div class="fade-up d2">' + offerBoxHTML(best.price, best.oldPrice, best.name + " package") + "</div>" +
+          '<div class="fade-up d2 svc-hero-side">' + '<div class="svc-art svc-art--hero">' + window.DS.serviceScene(s, true) + "</div>" + offerBoxHTML(best.price, best.oldPrice, best.name + " package") + "</div>" +
         "</div>" +
       "</section>" +
 
@@ -128,9 +128,14 @@
 
       '<section class="section section--dark"><div class="container">' +
         '<div class="section-head reveal"><span class="eyebrow">Recent work</span><h2 class="h-section">Our <span class="hl">work speaks</span></h2><p>A few recent ' + s.title.toLowerCase() + " projects for Nepali brands and creators.</p></div>" +
-        '<div class="showcase showcase--' + s.key + '">' + s.showcase.map((x, i) =>
-          '<div class="show-tile reveal" style="--h:' + (i * 47) % 360 + '"><div class="show-art"><span></span><span></span><span></span></div><div class="show-label">' + x + "</div></div>"
-        ).join("") + "</div>" +
+        '<div class="showcase showcase--' + s.key + (s.showcase.some((x) => x && x.image) ? " showcase--img" : "") + '">' + s.showcase.map((x, i) => {
+          const item = typeof x === "string" ? { title: x } : x;
+          return '<figure class="show-tile tilt reveal" style="--h:' + (i * 47) % 360 + '">' +
+            (item.image
+              ? '<div class="show-3d"><img class="show-img" src="' + window.DS.esc(item.image) + '" alt="' + window.DS.esc(item.title) + '" loading="lazy" decoding="async"></div>'
+              : '<div class="show-art"><span></span><span></span><span></span></div>') +
+            '<figcaption class="show-label">' + item.title + "</figcaption></figure>";
+        }).join("") + "</div>" +
       "</div></section>" +
 
       '<section class="section section--soft" id="packages"><div class="container">' +
@@ -236,9 +241,109 @@
     window.DS.enhance(root);
   }
 
+  /* ---------- Order tracking ---------- */
+  const STAGES = [
+    { key: "received", label: "Order received", icon: "check" },
+    { key: "confirmed", label: "Payment confirmed", icon: "award" },
+    { key: "in_progress", label: "Work in progress", icon: "pen", service: true },
+    { key: "review", label: "Your review", icon: "star", service: true },
+    { key: "delivered", label: "Delivered", icon: "package" }
+  ];
+  const STATUS_LABEL = { received: "Order received", confirmed: "Payment confirmed", in_progress: "Work in progress", review: "Ready for your review", delivered: "Delivered", cancelled: "Cancelled" };
+  const fmtDate = (iso) => new Date(iso).toLocaleString("en-GB", { day: "numeric", month: "short", year: "numeric", hour: "numeric", minute: "2-digit" });
+
+  function orderHTML(o) {
+    const { icon, npr, esc } = window.DS;
+    const stages = STAGES.filter((s) => !s.service || o.hasService);
+    const at = stages.findIndex((s) => s.key === o.status);
+    const cancelled = o.status === "cancelled";
+    const pillCls = o.status === "delivered" ? " status-pill--delivered" : cancelled ? " status-pill--cancelled" : "";
+    return '<div class="track-card">' +
+      '<div class="track-head"><div><span class="muted" style="font-size:.85rem">Order</span><h2>' + esc(o.id) + '</h2><span class="muted" style="font-size:.88rem">Placed ' + fmtDate(o.createdAt) + (o.customer ? " · for " + esc(o.customer) : "") + "</span></div>" +
+        '<span class="status-pill' + pillCls + '">' + esc(STATUS_LABEL[o.status] || o.status) + "</span></div>" +
+      (cancelled ? "" :
+        '<div class="progress-wrap"><div class="progress-top"><span>Overall progress</span><b>' + o.progress + '%</b></div><div class="progress-bar"><span data-progress="' + o.progress + '"></span></div></div>' +
+        '<div class="stages" style="--n:' + stages.length + '">' + stages.map((s, i) => {
+          // a status outside this order's stage list (e.g. "review" on a course order) counts as the nearest earlier stage
+          const cur = at === -1 ? STAGES.findIndex((x) => x.key === o.status) : at;
+          const pos = at === -1 ? stages.filter((x) => STAGES.findIndex((y) => y.key === x.key) <= cur).length - 1 : at;
+          const cls = i < pos || o.status === "delivered" ? "done" : i === pos ? "current" : "";
+          return '<div class="stage ' + cls + '"><div class="stage-dot">' + icon(cls === "done" ? "check" : s.icon) + "</div><span>" + s.label + "</span></div>";
+        }).join("") + "</div>") +
+      '<div class="track-info">' +
+        "<div><span>Items</span><b>" + o.items.map((i) => esc(i.title)).join("<br>") + "</b></div>" +
+        "<div><span>Total</span><b>" + npr(o.total) + "</b>" + (o.payment ? '<div class="muted" style="font-size:.85rem">via ' + esc(o.payment) + "</div>" : "") + "</div>" +
+        "<div><span>Working on it</span><b>" + (o.assignee ? esc(o.assignee) : cancelled ? "—" : "Assigning soon") + "</b></div>" +
+        "<div><span>Last update</span><b>" + fmtDate(o.updatedAt) + "</b></div>" +
+      "</div>" +
+      (o.deliveryUrl ? '<div class="delivery-box"><div><b>' + (o.status === "delivered" ? "Your files are ready 🎉" : "Preview your work") + "</b><p>Open the link to view or download.</p></div>" +
+        '<a class="btn btn--lime" target="_blank" rel="noopener" href="' + esc(o.deliveryUrl) + '">' + icon("download") + " Open files</a></div>" : "") +
+      '<h3 class="detail-h2" style="font-size:1.15rem;margin-bottom:14px">Updates</h3>' +
+      '<ol class="timeline">' + o.timeline.slice().reverse().map((t, i) =>
+        '<li style="animation-delay:' + i * 0.07 + 's"><b>' + esc(STATUS_LABEL[t.status] || t.status) + "</b>" + (t.note ? "<p>" + esc(t.note) + "</p>" : "") + '<time datetime="' + esc(t.at) + '">' + fmtDate(t.at) + "</time></li>"
+      ).join("") + "</ol>" +
+      '<p class="form-note" style="margin-top:22px">Need a change? <a href="#" data-open-chat style="color:var(--brand-700);font-weight:600">Ask the help chat</a> or <a target="_blank" rel="noopener" style="color:var(--brand-700);font-weight:600" href="' + window.DS.whatsappLink("Namaste! About my order " + o.id + ":") + '">message us on WhatsApp</a>.</p>' +
+    "</div>";
+  }
+
+  function initTrack() {
+    const form = $("[data-track-form]");
+    if (!form) return;
+    const { api, MyOrders, esc, validate } = window.DS;
+    const result = $("[data-track-result]");
+    const fId = $("#t-id", form), fPhone = $("#t-phone", form);
+    let timer = null;
+
+    async function lookup(id, phone, quiet) {
+      if (!quiet) result.style.opacity = ".5";
+      try {
+        const { order } = await api("/api/track", { id, phone });
+        MyOrders.add(order.id, phone);
+        result.innerHTML = orderHTML(order);
+        requestAnimationFrame(() => $$("[data-progress]", result).forEach((b) => { b.style.width = b.dataset.progress + "%"; }));
+        history.replaceState(null, "", "track.html?id=" + encodeURIComponent(order.id));
+        renderMine();
+        // keep the page live while the order is still moving
+        clearInterval(timer);
+        if (!["delivered", "cancelled"].includes(order.status)) timer = setInterval(() => lookup(order.id, phone, true), 60000);
+      } catch (err) {
+        if (!quiet) result.innerHTML = '<div class="track-card track-empty"><h3>Order not found</h3><p class="mb-0">' + esc(err.status ? err.message : "Order tracking needs the Digital Saathi server. Please WhatsApp us for an update.") + "</p></div>";
+      }
+      result.style.opacity = "";
+    }
+
+    function renderMine() {
+      const mine = MyOrders.read();
+      $("[data-my-orders]").innerHTML = mine.length
+        ? '<div class="my-orders"><b style="font-size:.9rem">Your recent orders</b>' + mine.map((o) => '<button type="button" data-mine="' + esc(o.id) + '"><span class="order-id">' + esc(o.id) + "</span><span>View →</span></button>").join("") + "</div>"
+        : "";
+    }
+
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      if (!validate(form)) return;
+      lookup(fId.value.trim(), fPhone.value.trim());
+    });
+    document.addEventListener("click", (e) => {
+      const b = e.target.closest("[data-mine]");
+      if (!b) return;
+      const o = MyOrders.read().find((x) => x.id === b.dataset.mine);
+      if (o) { fId.value = o.id; fPhone.value = o.phone; lookup(o.id, o.phone); }
+    });
+
+    renderMine();
+    const id = param("id");
+    if (id) {
+      fId.value = id;
+      const saved = MyOrders.read().find((o) => o.id === id.toUpperCase());
+      if (saved) { fPhone.value = saved.phone; lookup(saved.id, saved.phone); } else fPhone.focus();
+    }
+  }
+
   document.addEventListener("DOMContentLoaded", () => {
     initProduct();
     initService();
     initTeacher();
+    initTrack();
   });
 })();

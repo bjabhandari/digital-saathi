@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600"><defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e6f3dc"/><stop offset="1" stop-color="#b8dca0"/></linearGradient></defs>
+<rect width="800" height="600" fill="url(#bg)"/>
+<ellipse cx="400" cy="520" rx="220" ry="26" fill="#06140a" opacity=".35"/>
+<path d="M270 170 400 120l130 50v300l-130 50-130-50z" fill="#163822"/>
+<path d="M270 170 400 220v300l-130-50z" fill="#2f7219"/>
+<path d="M400 220 530 170v300l-130 50z" fill="#1f5a2c"/>
+<path d="M270 170 400 120l130 50-130 50z" fill="#3f8f27"/>
+<g transform="matrix(1 .385 0 1 270 170)"><path d="M30 130c0-60 35-90 35-90s35 30 35 90-35 70-35 70-35-10-35-70z" fill="#d4f27a"/><path d="M65 50v140" stroke="#2f7219" stroke-width="3"/>
+<text x="65" y="250" font-family="Oswald, 'Arial Narrow', Arial, sans-serif" font-size="22" font-weight="700" fill="#fff" text-anchor="middle">HIMALAYAN</text><text x="65" y="276" font-family="Oswald, 'Arial Narrow', Arial, sans-serif" font-size="15" fill="#d4f27a" text-anchor="middle">ORGANIC TEA</text></g>
+<g transform="matrix(1 -.385 0 1 400 220)" opacity=".9"><text x="65" y="120" font-family="Outfit, 'Segoe UI', Arial, sans-serif" font-size="16" fill="#d4f27a" text-anchor="middle">Ilam · Nepal</text><text x="65" y="150" font-family="Outfit, 'Segoe UI', Arial, sans-serif" font-size="14" fill="#a6d98b" text-anchor="middle">100 g</text></g>
+<circle cx="640" cy="160" r="40" fill="#d4f27a" opacity=".5"/><circle cx="160" cy="420" r="26" fill="#7cc15a" opacity=".5"/></svg>

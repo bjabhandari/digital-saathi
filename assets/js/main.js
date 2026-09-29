@@ -46,6 +46,9 @@
     instagram: '<rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><path d="M17.5 6.5h.01"/>',
     youtube: '<path d="M2.5 17a24 24 0 0 1 0-10 2 2 0 0 1 1.4-1.4 49.6 49.6 0 0 1 16.2 0A2 2 0 0 1 21.5 7a24 24 0 0 1 0 10 2 2 0 0 1-1.4 1.4 49.6 49.6 0 0 1-16.2 0A2 2 0 0 1 2.5 17"/><path d="m10 15 5-3-5-3z"/>',
     tiktok: '<path d="M9 12a4 4 0 1 0 4 4V2a5 5 0 0 0 5 5"/>',
+    package: '<path d="M16.5 9.4 7.5 4.2"/><path d="M21 16V8a2 2 0 0 0-1-1.7l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.7l7 4a2 2 0 0 0 2 0l7-4a2 2 0 0 0 1-1.7z"/><path d="M3.3 7 12 12l8.7-5M12 22V12"/>',
+    chat: '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
+    send: '<path d="m22 2-7 20-4-9-9-4z"/><path d="M22 2 11 13"/>',
     whatsapp: '<path d="M3 21l1.65-3.8a9 9 0 1 1 3.4 2.9L3 21"/><path d="M9 10a.5.5 0 0 0 1 0V9a.5.5 0 0 0-1 0v1a5 5 0 0 0 5 5h1a.5.5 0 0 0 0-1h-1a.5.5 0 0 0 0 1"/>'
   };
 
@@ -54,6 +57,16 @@
   }
 
   const npr = (n) => "Rs. " + Math.round(Number(n)).toLocaleString("en-IN");
+  const esc = (v) => String(v == null ? "" : v).replace(/[&<>"']/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]));
+
+  /* 3D stack of up to three images that fans out on hover and follows the pointer */
+  function stack3d(images, alt, extra) {
+    const list = (images || []).filter(Boolean).slice(0, 3);
+    if (!list.length) return "";
+    return '<div class="stack3d ' + (extra || "") + '" data-stack3d aria-hidden="true"><div class="stack3d-inner">' +
+      list.map((src, i) => '<img class="stack3d-card" style="--i:' + i + ";--n:" + list.length + '" src="' + esc(src) + '" alt="" loading="lazy" decoding="async">').reverse().join("") +
+      "</div></div>" + (alt ? '<span class="sr-only">' + esc(alt) + "</span>" : "");
+  }
   const $ = (sel, root) => (root || document).querySelector(sel);
   const $$ = (sel, root) => Array.from((root || document).querySelectorAll(sel));
   const teacherById = (id) => window.TEACHERS.find((t) => t.id === id);
@@ -168,9 +181,15 @@
     clear() { Cart.write([]); },
     resolved() {
       return Cart.read().map((i) => {
+        if (i.kind === "plan") {
+          const [key, ...rest] = i.id.split("|");
+          const s = window.SERVICES[key];
+          const p = s && s.plans.find((x) => x.name === rest.join("|"));
+          return p ? { kind: "plan", id: i.id, title: s.title + " — " + p.name, price: p.price, oldPrice: p.oldPrice || p.price, unit: p.unit, color: s.color, icon: s.icon, image: s.image } : null;
+        }
         const src = i.kind === "course" ? window.COURSES : window.TOOLS;
         const item = src.find((x) => x.id === i.id);
-        return item ? Object.assign({ kind: i.kind }, item) : null;
+        return item ? Object.assign({ kind: i.kind, image: item.images && item.images[0] }, item) : null;
       }).filter(Boolean);
     }
   };
@@ -197,6 +216,20 @@
   }
 
   const whatsappLink = (text) => "https://wa.me/" + window.SITE.whatsapp + "?text=" + encodeURIComponent(text);
+
+  /* ---------- API (available when the site runs on server.js) ---------- */
+  async function api(url, body) {
+    const res = await fetch(url, body ? { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) } : {});
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) { const err = new Error(data.error || "Something went wrong. Please try again."); err.status = res.status; throw err; }
+    return data;
+  }
+
+  /* Orders placed from this browser, so the track page can list them */
+  const MyOrders = {
+    read() { try { return JSON.parse(store.get("ds_orders")) || []; } catch (e) { return []; } },
+    add(id, phone) { store.set("ds_orders", JSON.stringify([{ id, phone }].concat(MyOrders.read().filter((o) => o.id !== id)).slice(0, 20))); }
+  };
 
   /* ---------- Preloader (first page view per session) ---------- */
   function preloader() {
@@ -243,6 +276,7 @@
         '<a href="index.html" class="logo" aria-label="Digital Saathi home"><img src="assets/img/wordmark.png" alt="Digital Saathi" width="560" height="380"></a>' +
         '<nav class="nav" id="site-nav" aria-label="Main">' + links + "</nav>" +
         '<div class="header-actions">' +
+          '<a href="track.html" class="cart-btn track-btn" aria-label="Track your order" title="Track your order">' + icon("package") + "</a>" +
           '<a href="cart.html" class="cart-btn" aria-label="Cart">' + icon("cart") + '<span class="cart-count" data-count="0">0</span></a>' +
           '<a href="courses.html" class="btn btn--primary btn--sm">Start Learning</a>' +
           '<button class="menu-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="site-nav">' + icon("menu") + "</button>" +
@@ -307,6 +341,7 @@
             '<li><a href="services.html#video">Video Editing</a></li>' +
             '<li><a href="services.html#boost">Facebook Boost</a></li>' +
             '<li><a href="services.html#calculator">Boost Calculator</a></li>' +
+            '<li><a href="track.html">Track Your Order</a></li>' +
             '<li><a href="tools.html">Editing Tools</a></li>' +
           "</ul></div>" +
           "<div><h5>Stay in touch</h5><ul>" +
@@ -353,7 +388,7 @@
       '<article class="card tilt reveal">' +
         '<a href="course.html?id=' + c.id + '" class="thumb ' + c.color + '" aria-label="' + c.title + '">' +
           (c.bestseller ? '<span class="badge badge--light">🔥 Bestseller</span>' : '<span class="badge badge--light">' + c.level + "</span>") +
-          icon(c.icon, "thumb-icon") +
+          (c.images && c.images.length ? stack3d(c.images) : icon(c.icon, "thumb-icon")) +
         "</a>" +
         '<div class="card-body">' +
           '<span class="badge">' + c.category + "</span>" +
@@ -451,9 +486,10 @@
         (p.oldPrice ? '<div class="plan-old"><del>' + npr(p.oldPrice) + '</del><span class="offer-pct">-' + Math.round((1 - p.price / p.oldPrice) * 100) + "%</span></div>" : "") +
         '<div class="plan-price">' + npr(p.price) + " <small>" + p.unit + "</small></div>" +
         '<ul class="check-list" style="margin-top:16px">' + p.features.map((f) => "<li>" + f + "</li>").join("") + "</ul>" +
-        '<a class="btn ' + (p.featured ? "btn--lime" : "btn--primary") + ' btn--block" target="_blank" rel="noopener" href="' +
+        '<button class="btn ' + (p.featured ? "btn--lime" : "btn--primary") + ' btn--block" data-add="plan:' + esc(service.key + "|" + p.name) + '">' + addBtnLabel("plan", service.key + "|" + p.name, "Order Now") + "</button>" +
+        '<a class="plan-wa" target="_blank" rel="noopener" href="' +
           whatsappLink("Namaste! I'm interested in the " + service.title + " — " + p.name + " package (" + npr(p.price) + " " + p.unit + (p.oldPrice ? ", today's offer price" : "") + ").") +
-        '">Order via WhatsApp ' + icon("arrow", "arrow") + "</a>" +
+        '">' + icon("whatsapp") + " or ask on WhatsApp</a>" +
       "</div>"
     );
   }
@@ -528,7 +564,7 @@
     const related = window.COURSES.filter((x) => x.id !== c.id && x.category === c.category).slice(0, 3);
 
     root.innerHTML =
-      '<section class="page-hero"><div class="container">' +
+      '<section class="page-hero' + (c.images && c.images.length ? " page-hero--media" : "") + '"><div class="container' + (c.images && c.images.length ? " course-hero-grid" : "") + '"><div>' +
         '<div class="crumbs"><a href="index.html">Home</a> / <a href="courses.html">Courses</a> / ' + c.category + "</div>" +
         '<span class="badge">' + c.category + " · " + c.level + "</span>" +
         '<h1 class="h-section" style="margin-top:12px;max-width:860px">' + c.title + "</h1>" +
@@ -539,7 +575,7 @@
           "<span>" + icon("book") + " " + c.lessons + " lessons</span>" +
           "<span>" + icon("award") + " Certificate</span>" +
         "</div>" +
-      "</div></section>" +
+      "</div>" + (c.images && c.images.length ? '<div class="course-hero-art fade-up d2">' + stack3d(c.images, "", "stack3d--hero") + "</div>" : "") + "</div></section>" +
       '<section class="section" style="padding-top:52px"><div class="container detail-grid">' +
         "<div>" +
           '<h2 class="detail-h2 reveal">What you\'ll learn</h2>' +
@@ -555,7 +591,7 @@
           "</div>" +
         "</div>" +
         '<aside class="detail-aside reveal-right"><div class="card">' +
-          '<div class="thumb ' + c.color + '">' + icon(c.icon, "thumb-icon") + "</div>" +
+          '<div class="thumb ' + c.color + '">' + (c.images && c.images.length ? '<img class="thumb-img" src="' + esc(c.images[0]) + '" alt="">' : icon(c.icon, "thumb-icon")) + "</div>" +
           '<div class="card-body">' +
             '<div class="price" style="font-size:1.9rem">' + npr(c.price) + "<del>" + npr(c.oldPrice) + "</del></div>" +
             offerBoxHTML(c.price, c.oldPrice) +
@@ -605,7 +641,30 @@
   }
 
   /* ---------- Page: services (tabs + boost calculator) ---------- */
+  /* 3D scene: service illustration with floating stat chips on separate depth layers */
+  function serviceScene(s, big) {
+    const chips = (s.stats || []).slice(0, big ? 3 : 2);
+    return '<div class="scene3d' + (big ? " scene3d--big" : "") + '" data-scene3d aria-hidden="true"><div class="scene3d-inner">' +
+      '<span class="scene3d-glow ' + s.color + '"></span>' +
+      (s.image ? '<img class="scene3d-img" src="' + esc(s.image) + '" alt="" loading="lazy" decoding="async">' : '<div class="scene3d-icon ' + s.color + '">' + icon(s.icon) + "</div>") +
+      chips.map((c, i) => '<span class="scene3d-chip scene3d-chip--' + i + '"><b>' + c[0] + "</b>" + c[1] + "</span>").join("") +
+      "</div></div>";
+  }
+
+  function serviceCard(s) {
+    return '<div class="service-card service-card--media reveal" id="' + esc(s.key) + '">' +
+      '<div class="svc-art">' + serviceScene(s) + "</div>" +
+      '<div class="icon ' + s.color + '">' + icon(s.icon) + "</div>" +
+      "<h3>" + s.title + "</h3>" +
+      "<p>" + s.blurb + "</p>" +
+      '<ul class="check-list">' + (s.features || []).map((f) => "<li>" + f + "</li>").join("") + "</ul>" +
+      '<a href="service.html?id=' + encodeURIComponent(s.key) + '" class="link">View full details ' + icon("arrow") + "</a>" +
+    "</div>";
+  }
+
   function initServices() {
+    const cards = $("[data-service-cards]");
+    if (cards) cards.innerHTML = Object.values(window.SERVICES).map(serviceCard).join("");
     const wrap = $("[data-service-plans]");
     if (!wrap) return;
     const services = Object.values(window.SERVICES);
@@ -714,11 +773,13 @@
         return;
       }
       form.hidden = false;
+      const brief = $("[data-brief]", form);
+      if (brief) brief.hidden = !items.some((i) => i.kind === "plan");
       list.innerHTML = '<div class="grid" style="gap:12px">' + items.map((i, n) =>
         '<div class="cart-item fade-up" style="animation-delay:' + n * 0.06 + 's">' +
-          '<div class="thumb ' + i.color + '">' + icon(i.icon, "thumb-icon") + "</div>" +
-          "<div><h4>" + i.title + '</h4><span class="badge">' + (i.kind === "course" ? "Course" : "Editing Tool") + "</span></div>" +
-          '<div style="text-align:right"><div class="price" style="font-size:1rem">' + npr(i.price) + '</div><button class="remove" data-remove="' + i.kind + ":" + i.id + '">Remove</button></div>' +
+          '<div class="thumb ' + i.color + '">' + (i.image ? '<img class="thumb-img" src="' + esc(i.image) + '" alt="">' : icon(i.icon, "thumb-icon")) + "</div>" +
+          "<div><h4>" + i.title + '</h4><span class="badge">' + ({ course: "Course", tool: "Editing Tool", plan: "Service " + (i.unit || "") }[i.kind] || "") + "</span></div>" +
+          '<div style="text-align:right"><div class="price" style="font-size:1rem">' + npr(i.price) + '</div><button class="remove" data-remove="' + esc(i.kind + ":" + i.id) + '">Remove</button></div>' +
         "</div>"
       ).join("") + "</div>";
 
@@ -733,31 +794,62 @@
     list.addEventListener("click", (e) => {
       const b = e.target.closest("[data-remove]");
       if (!b) return;
-      const [kind, id] = b.dataset.remove.split(":");
+      const cut = b.dataset.remove.indexOf(":");
+      const kind = b.dataset.remove.slice(0, cut), id = b.dataset.remove.slice(cut + 1);
       const row = b.closest(".cart-item");
       row.classList.add("removing");
       setTimeout(() => { Cart.remove(kind, id); render(); }, REDUCED ? 0 : 320);
     });
 
-    form.addEventListener("submit", (e) => {
+    form.addEventListener("submit", async (e) => {
       e.preventDefault();
       if (!validate(form)) return;
       const data = new FormData(form);
       const items = Cart.resolved();
-      const total = items.reduce((s, i) => s + i.price, 0);
+      const total = items.reduce((sum, i) => sum + i.price, 0);
+      const btn = $("button[type=submit], button:not([type])", form);
+      btn.disabled = true;
+      btn.textContent = "Placing order…";
+
+      // Save the order so it can be tracked; fall back to WhatsApp only if the server is unreachable
+      let order = null;
+      try {
+        const res = await api("/api/orders", {
+          name: data.get("name"), phone: data.get("phone"), email: data.get("email"),
+          payment: data.get("payment"), brief: data.get("brief") || "",
+          items: Cart.read()
+        });
+        order = res.order;
+        MyOrders.add(order.id, data.get("phone"));
+      } catch (err) {
+        if (err.status && err.status < 500) { toast(err.message); btn.disabled = false; btn.textContent = "Place Order"; return; }
+      }
+
       const msg =
-        "Namaste Digital Saathi! I'd like to place an order.\n\n" +
+        "Namaste Digital Saathi! I'd like to place an order." + (order ? "\nOrder ID: " + order.id : "") + "\n\n" +
         items.map((i, n) => (n + 1) + ". " + i.title + " — " + npr(i.price)).join("\n") +
         "\n\nTotal: " + npr(total) +
         "\nPayment: " + data.get("payment") +
         "\n\nName: " + data.get("name") +
         "\nPhone: " + data.get("phone") +
-        "\nEmail: " + data.get("email");
-      window.open(whatsappLink(msg), "_blank", "noopener");
+        "\nEmail: " + data.get("email") +
+        (data.get("brief") ? "\n\nProject brief: " + data.get("brief") : "");
       Cart.clear();
       render();
+      btn.disabled = false;
+      btn.textContent = "Place Order";
       const done = $("[data-order-done]");
+      done.innerHTML = order
+        ? '<div class="order-done">' +
+            '<svg class="tick" viewBox="0 0 72 72"><circle cx="36" cy="36" r="30"/><path d="M24 37l8 8 16-17"/></svg>' +
+            "<div><p class=\"order-done-title\">🎉 Order placed!</p>" +
+            '<p class="muted">Your order ID is <b class="order-id">' + esc(order.id) + "</b>. Save it — you can follow every step of your order, from payment to delivery.</p>" +
+            '<div class="flex gap-12 wrap"><a class="btn btn--primary" href="track.html?id=' + encodeURIComponent(order.id) + '">' + icon("package") + " Track my order</a>" +
+            '<a class="btn btn--whatsapp" target="_blank" rel="noopener" href="' + whatsappLink(msg) + '">' + icon("whatsapp") + " Send payment on WhatsApp</a></div></div>" +
+          "</div>"
+        : '<p style="font-size:1.15rem;font-weight:800;margin-bottom:6px">🎉 Order sent!</p><p class="mb-0 muted">We\'ve opened WhatsApp with your order details. Send the message and we\'ll share payment details and your access right away.</p>';
       done.hidden = false;
+      if (!order) window.open(whatsappLink(msg), "_blank", "noopener");
       done.scrollIntoView({ behavior: REDUCED ? "auto" : "smooth", block: "center" });
     });
 
@@ -795,6 +887,9 @@
         e.preventDefault();
         if (!validate(form)) return;
         const data = new FormData(form);
+        const fields = {};
+        data.forEach((v, k) => { fields[k] = String(v); });
+        api("/api/messages", { type: form.dataset.inquiry, fields }).catch(() => { /* WhatsApp still carries the message */ });
         const lines = [form.dataset.inquiry, ""];
         data.forEach((v, k) => { if (String(v).trim()) lines.push(k.charAt(0).toUpperCase() + k.slice(1) + ": " + v); });
         window.open(whatsappLink(lines.join("\n")), "_blank", "noopener");
@@ -822,9 +917,10 @@
     document.addEventListener("click", (e) => {
       const b = e.target.closest("[data-add]");
       if (!b) return;
-      const [kind, id] = b.dataset.add.split(":");
+      const cut = b.dataset.add.indexOf(":");
+      const kind = b.dataset.add.slice(0, cut), id = b.dataset.add.slice(cut + 1);
       if (!Cart.add(kind, id)) { toast("Already in your cart — view it anytime from the cart icon"); return; }
-      $$('[data-add="' + b.dataset.add + '"]').forEach((x) => { x.textContent = "In Cart ✓"; x.classList.add("is-added"); });
+      $$("[data-add]").filter((x) => x.dataset.add === b.dataset.add).forEach((x) => { x.textContent = "In Cart ✓"; x.classList.add("is-added"); });
       toast("Added to cart ✓");
       flyToCart(b);
     });
@@ -926,6 +1022,24 @@
     });
   }
 
+  /* 3D image stacks & scenes: tilt toward the pointer */
+  function initStack3d(root) {
+    if (REDUCED || !FINE_POINTER) return;
+    $$("[data-stack3d], [data-scene3d]", root).forEach((el) => {
+      const host = el.closest(".card, .service-card, .course-hero-art, .svc-art") || el;
+      if (host._stack3d) return;
+      host._stack3d = true;
+      host.addEventListener("pointermove", (e) => {
+        const r = host.getBoundingClientRect();
+        const x = (e.clientX - r.left) / r.width - 0.5, y = (e.clientY - r.top) / r.height - 0.5;
+        $$("[data-stack3d], [data-scene3d]", host).forEach((s) => { s.style.setProperty("--ry", (x * 22).toFixed(2) + "deg"); s.style.setProperty("--rx", (-y * 16).toFixed(2) + "deg"); });
+      });
+      host.addEventListener("pointerleave", () => {
+        $$("[data-stack3d], [data-scene3d]", host).forEach((s) => { s.style.removeProperty("--ry"); s.style.removeProperty("--rx"); });
+      });
+    });
+  }
+
   function initMarquee() {
     $$("[data-marquee]").forEach((el) => {
       const items = el.dataset.marquee.split("|").map((w) => '<span class="marquee-item">' + w + "</span>").join("");
@@ -1001,6 +1115,7 @@
   function enhance(root) {
     observeReveals(root);
     initTilt(root);
+    initStack3d(root);
     initDetails(root);
   }
 
@@ -1031,6 +1146,7 @@
   window.DS = {
     icon, npr, Cart, toast, whatsappLink, enhance, validate, teacherById, teacherAvatar,
     courseCard, toolCard, teacherCard, planCard, testimonialCard, titlesStage, softwareTile, badgesHTML,
-    offerBoxHTML, timerHTML, tickTimers, Offer, initBoostCalculator, addBtnLabel, REDUCED
+    offerBoxHTML, timerHTML, tickTimers, Offer, initBoostCalculator, addBtnLabel, REDUCED,
+    api, MyOrders, esc, stack3d, initStack3d, serviceScene
   };
 })();

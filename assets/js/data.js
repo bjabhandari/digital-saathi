@@ -157,9 +157,11 @@ window.TEACHERS = [
   }
 ];
 
+/* images: 1–3 cover images for each course (first one is the main cover) */
 window.COURSES = [
   {
     id: "graphic-design-masterclass",
+    images: ["assets/img/services/design-1.svg", "assets/img/services/design-2.svg", "assets/img/services/design-4.svg"],
     title: "Graphic Design Masterclass: Photoshop + Illustrator",
     category: "Design", level: "Beginner", teacher: "aarav",
     price: 4999, oldPrice: 9999, hours: 32, lessons: 86, rating: 4.9, reviews: 412,
@@ -175,6 +177,7 @@ window.COURSES = [
   },
   {
     id: "video-editing-premiere",
+    images: ["assets/img/services/video-1.svg", "assets/img/services/video-6.svg", "assets/img/services/video-4.svg"],
     title: "Professional Video Editing with Premiere Pro",
     category: "Video", level: "Beginner", teacher: "sneha",
     price: 5499, oldPrice: 10999, hours: 28, lessons: 72, rating: 4.8, reviews: 356,
@@ -190,6 +193,7 @@ window.COURSES = [
   },
   {
     id: "animated-titles-course",
+    images: ["assets/img/services/video-2.svg", "assets/img/services/video-5.svg", "assets/img/services/video-3.svg"],
     title: "Animated Titles & Lower Thirds Masterclass",
     category: "Video", level: "Intermediate", teacher: "anisha",
     price: 2999, oldPrice: 7999, hours: 12, lessons: 36, rating: 4.9, reviews: 221,
@@ -205,6 +209,7 @@ window.COURSES = [
   },
   {
     id: "facebook-ads-mastery",
+    images: ["assets/img/services/boost-1.svg", "assets/img/services/boost-3.svg", "assets/img/services/boost-5.svg"],
     title: "Facebook & Instagram Ads Mastery",
     category: "Marketing", level: "Intermediate", teacher: "bikash",
     price: 3999, oldPrice: 7999, hours: 18, lessons: 48, rating: 4.9, reviews: 289,
@@ -220,6 +225,7 @@ window.COURSES = [
   },
   {
     id: "canva-for-business",
+    images: ["assets/img/services/design-2.svg", "assets/img/services/design-3.svg", "assets/img/services/boost-6.svg"],
     title: "Canva for Business & Social Media",
     category: "Design", level: "Beginner", teacher: "priya",
     price: 1999, oldPrice: 3999, hours: 10, lessons: 30, rating: 4.7, reviews: 198,
@@ -234,6 +240,7 @@ window.COURSES = [
   },
   {
     id: "motion-graphics-ae",
+    images: ["assets/img/services/video-5.svg", "assets/img/services/design-1.svg", "assets/img/services/video-2.svg"],
     title: "Motion Graphics with After Effects",
     category: "Video", level: "Intermediate", teacher: "anisha",
     price: 5999, oldPrice: 11999, hours: 26, lessons: 64, rating: 4.8, reviews: 174,
@@ -248,6 +255,7 @@ window.COURSES = [
   },
   {
     id: "ui-ux-figma",
+    images: ["assets/img/services/design-ui.svg", "assets/img/services/design-5.svg", "assets/img/services/video-6.svg"],
     title: "UI/UX Design with Figma",
     category: "Design", level: "Beginner", teacher: "rohan",
     price: 4499, oldPrice: 8999, hours: 22, lessons: 58, rating: 4.8, reviews: 143,
@@ -262,6 +270,7 @@ window.COURSES = [
   },
   {
     id: "mobile-video-capcut",
+    images: ["assets/img/services/video-2.svg", "assets/img/services/video-3.svg", "assets/img/services/boost-6.svg"],
     title: "Mobile Video Editing with CapCut",
     category: "Video", level: "Beginner", teacher: "sneha",
     price: 1499, oldPrice: 2999, hours: 8, lessons: 24, rating: 4.7, reviews: 265,
@@ -275,6 +284,7 @@ window.COURSES = [
   },
   {
     id: "social-media-marketing",
+    images: ["assets/img/services/boost-2.svg", "assets/img/services/boost-6.svg", "assets/img/services/design-2.svg"],
     title: "Social Media Marketing for Nepali Businesses",
     category: "Marketing", level: "Beginner", teacher: "priya",
     price: 2999, oldPrice: 5999, hours: 14, lessons: 40, rating: 4.8, reviews: 187,
@@ -446,10 +456,11 @@ window.TOOLS = [
   }
 ];
 
-/* Services & pricing packages (price = offer price, oldPrice = regular price) */
+/* Services & pricing packages (price = offer price, oldPrice = regular price).
+   image: illustration on the services pages; showcase: "Recent work" tiles. */
 window.SERVICES = {
   design: {
-    key: "design", title: "Graphic Design", icon: "palette", color: "g1",
+    key: "design", image: "assets/img/services/design.svg", title: "Graphic Design", icon: "palette", color: "g1",
     tagline: "Designs that make people stop scrolling.",
     blurb: "Logos, brand identity, social media creatives, menus, banners and print — designed to make you stand out.",
     about: "Our design team creates everything your brand needs to look professional online and offline. From a single poster to a complete brand identity, every design is made from scratch for your business — no generic templates — and delivered with source files you own.",
@@ -461,7 +472,14 @@ window.SERVICES = {
       { icon: "layers", title: "Print Design", text: "Flyers, brochures, banners, business cards and standees." },
       { icon: "box", title: "Packaging & Menus", text: "Product labels, boxes and restaurant menus that sell." }
     ],
-    showcase: ["Momo House logo", "Boutique sale post", "Café menu", "College banner", "Real estate flyer", "Tea packaging"],
+    showcase: [
+      { title: "Momo House logo", image: "assets/img/services/design-1.svg" },
+      { title: "Boutique sale post", image: "assets/img/services/design-2.svg" },
+      { title: "Café menu", image: "assets/img/services/design-3.svg" },
+      { title: "College banner", image: "assets/img/services/design-4.svg" },
+      { title: "Real estate flyer", image: "assets/img/services/design-5.svg" },
+      { title: "Tea packaging", image: "assets/img/services/design-6.svg" }
+    ],
     plans: [
       { name: "Starter", price: 1999, oldPrice: 2500, unit: "/ project", desc: "Perfect for a single design need.", features: ["1 design (post, flyer or banner)", "2 concepts", "2 revisions", "Delivery in 2 days", "Source file included"] },
       { name: "Business", price: 7999, oldPrice: 9999, unit: "/ month", desc: "Monthly social media design for growing brands.", featured: true, features: ["15 social media posts", "4 story designs", "Brand-consistent templates", "Unlimited revisions", "Priority support"] },
@@ -475,7 +493,7 @@ window.SERVICES = {
     ]
   },
   video: {
-    key: "video", title: "Video Editing", icon: "video", color: "g2",
+    key: "video", image: "assets/img/services/video.svg", title: "Video Editing", icon: "video", color: "g2",
     tagline: "Edits that keep viewers watching.",
     blurb: "YouTube videos, reels, ads, wedding films and corporate videos — edited to hold attention and drive action.",
     about: "Send us your raw footage and get back scroll-stopping videos. Our editors handle cutting, pacing, animated titles, captions, color grading, sound design and thumbnails — using the same titles packs and techniques we teach in our courses.",
@@ -487,7 +505,14 @@ window.SERVICES = {
       { icon: "megaphone", title: "Ads & Promos", text: "Short product and brand videos built to convert." },
       { icon: "type", title: "Titles & Subtitles", text: "Animated titles, lower thirds and accurate captions." }
     ],
-    showcase: ["Travel vlog", "Product reel", "Podcast clip", "Wedding teaser", "Restaurant ad", "Tech review"],
+    showcase: [
+      { title: "Travel vlog", image: "assets/img/services/video-1.svg" },
+      { title: "Product reel", image: "assets/img/services/video-2.svg" },
+      { title: "Podcast clip", image: "assets/img/services/video-3.svg" },
+      { title: "Wedding teaser", image: "assets/img/services/video-4.svg" },
+      { title: "Restaurant ad", image: "assets/img/services/video-5.svg" },
+      { title: "Tech review", image: "assets/img/services/video-6.svg" }
+    ],
     plans: [
       { name: "Reel Pack", price: 3999, oldPrice: 4999, unit: "/ 5 reels", desc: "Short-form content that gets views.", features: ["5 reels up to 60s", "Captions & trending effects", "Music & SFX", "2 revisions each", "3–4 day delivery"] },
       { name: "Creator", price: 11999, oldPrice: 14999, unit: "/ month", desc: "For YouTubers and brands posting weekly.", featured: true, features: ["4 long videos (up to 15 min)", "8 reels / shorts", "Thumbnails included", "Color grading", "Dedicated editor"] },
@@ -501,7 +526,7 @@ window.SERVICES = {
     ]
   },
   boost: {
-    key: "boost", title: "Facebook Boost", icon: "megaphone", color: "g7",
+    key: "boost", image: "assets/img/services/boost.svg", title: "Facebook Boost", icon: "megaphone", color: "g7",
     tagline: "Reach real customers — pay in rupees.",
     blurb: "Reach thousands of real customers in Nepal. We boost and manage your Facebook & Instagram ads with local payment.",
     about: "No dollar card? No problem. Pay us in NPR via eSewa, Khalti or bank transfer, and our Meta ads team boosts your posts from verified ad accounts. We handle targeting, budgets and reporting so you get more messages, followers and sales.",
@@ -513,7 +538,14 @@ window.SERVICES = {
       { icon: "users", title: "Page Growth", text: "Grow real followers and page likes in your area." },
       { icon: "award", title: "Clear Reports", text: "Screenshots and reports showing reach, results and cost." }
     ],
-    showcase: ["+248 messages", "+1.2K page likes", "52K people reached", "Rs. 4 per message", "3.1× more orders", "+800 followers"],
+    showcase: [
+      { title: "+248 messages", image: "assets/img/services/boost-1.svg" },
+      { title: "+1.2K page likes", image: "assets/img/services/boost-2.svg" },
+      { title: "52K people reached", image: "assets/img/services/boost-3.svg" },
+      { title: "Rs. 4 per message", image: "assets/img/services/boost-4.svg" },
+      { title: "3.1× more orders", image: "assets/img/services/boost-5.svg" },
+      { title: "+800 followers", image: "assets/img/services/boost-6.svg" }
+    ],
     plans: [
       { name: "Boost Lite", price: 1500, oldPrice: 1800, unit: "/ $10 ad spend", desc: "Try boosting a single post.", features: ["$10 ad budget included", "1 post boosted", "Location & age targeting", "Runs 3–5 days", "Result screenshot"] },
       { name: "Growth", price: 7000, oldPrice: 8500, unit: "/ $50 ad spend", desc: "Consistent reach for small businesses.", featured: true, features: ["$50 ad budget included", "Up to 4 posts boosted", "Interest targeting", "Messages / leads objective", "Weekly report"] },
@@ -559,3 +591,19 @@ window.FAQS = [
   { q: "Can I request a custom design or video package?", a: "Absolutely. Contact us with your requirement and we'll send you a custom quote within 24 hours." },
   { q: "Can I become a teacher on Digital Saathi?", a: "Yes! If you're skilled in design, video, marketing or tech, apply on our Teachers page. We help you record, publish and sell your course." }
 ];
+
+/* Help chat — greeting, quick-reply buttons and extra answers.
+   answers: keywords (comma separated) the visitor might type, and the reply. */
+window.CHATBOT = {
+  enabled: true,
+  name: "Saathi",
+  greeting: "Namaste! 🙏 I'm Saathi, your Digital Saathi helper. Ask me about our services, courses, prices or your order.",
+  quickReplies: ["What services do you offer?", "Show course prices", "How do I order?", "Track my order", "Talk to a human"],
+  answers: [
+    { keywords: "payment, pay, esewa, khalti, bank, fonepay", answer: "You can pay with eSewa, Khalti, Fonepay QR, mobile banking or bank transfer. After you place an order we send payment details on WhatsApp." },
+    { keywords: "refund, money back, cancel", answer: "If we haven't started your service yet, we can cancel and refund in full. For courses, message us within 3 days if it's not right for you." },
+    { keywords: "location, office, where, address", answer: "We're based in Kathmandu, Nepal, and work with clients all over Nepal and abroad — everything is done online." },
+    { keywords: "discount, coupon, sale, launch offer, todays offer, today offer", answer: "Today's launch offer is already applied to the prices you see. The timer resets at midnight Nepal time." },
+    { keywords: "certificate", answer: "Yes — every course includes a certificate of completion." }
+  ]
+};

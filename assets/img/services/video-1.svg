@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600"><defs><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffb88a"/><stop offset="1" stop-color="#8fb6e0"/></linearGradient></defs>
+<rect width="800" height="600" fill="url(#sky)"/>
+<circle cx="600" cy="170" r="60" fill="#ffe7a8"/>
+<path d="M0 420 160 220l90 110 130-190 170 230 90-90 160 160v160H0z" fill="#5b7fa8"/>
+<path d="M380 140l40 58-24-6-16 24-14-22-22 6z" fill="#fff"/><path d="M160 220l30 38-14-4-16 16-10-14-16 4z" fill="#fff"/>
+<path d="M0 470 200 360 380 460 560 380 800 470V600H0z" fill="#2f7219"/>
+<path d="M0 530 260 470 520 540 800 500V600H0z" fill="#163822"/>
+<text x="60" y="110" font-family="Oswald, 'Arial Narrow', Arial, sans-serif" font-size="70" fill="#fff" font-weight="700" text-anchor="start">EVEREST</text><text x="62" y="150" font-family="Oswald, 'Arial Narrow', Arial, sans-serif" font-size="30" fill="#ffe7a8" font-weight="700" text-anchor="start" letter-spacing="4">BASE CAMP VLOG</text>
+<circle cx="400" cy="330" r="46" fill="#fff" opacity=".92"/><path d="M386.2 309.3v41.4l34.5-20.7z" fill="#e02424"/><rect x="40" y="560" width="720" height="6" rx="3" fill="#fff" opacity=".3"/><rect x="40" y="560" width="446.4" height="6" rx="3" fill="#e02424"/><circle cx="486.4" cy="563" r="9" fill="#e02424"/></svg>
