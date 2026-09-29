@@ -2,9 +2,11 @@
   "name": "digital-saathi",
   "version": "1.0.0",
   "private": true,
-  "description": "Digital Saathi website, admin panel and order tracking",
+  "description": "Digital Saathi website (React) with admin panel, order tracking and help chat",
   "main": "server.js",
   "scripts": {
+    "dev": "concurrently -k -n api,web -c green,cyan \"node server.js\" \"vite\"",
+    "build": "vite build",
     "start": "node server.js",
     "set-password": "node server.js --set-password"
   },
@@ -12,9 +14,17 @@
     "node": ">=16"
   },
   "dependencies": {
-    "express": "^4.21.2"
+    "express": "^4.21.2",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.30.6"
   },
   "optionalDependencies": {
     "@anthropic-ai/sdk": "^0.129.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.2.1",
+    "concurrently": "^8.2.2",
+    "vite": "^4.5.14"
   }
 }
