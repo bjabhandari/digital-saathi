@@ -4,6 +4,9 @@ import { AdminCtx, NavIcon, SECTIONS, api, sectionByKey, setUnauthorizedHandler,
 import Dashboard from "./Dashboard.jsx";
 import Orders from "./Orders.jsx";
 import Messages from "./Messages.jsx";
+import Chats from "./Chats.jsx";
+import CallCenter from "./CallCenter.jsx";
+import Recordings from "./Recordings.jsx";
 import Settings from "./Settings.jsx";
 import { CollectionList, ItemEditor, ValueEditor } from "./Content.jsx";
 
@@ -57,6 +60,8 @@ function Sidebar({ open, stats, onLogout }) {
         {link("/", "Dashboard", "dashboard", 0, true)}
         {link("/orders", "Orders", "orders", stats && stats.activeOrders)}
         {link("/messages", "Messages", "messages", stats && stats.unread)}
+        {link("/chats", "Live chats", "messages", stats && stats.unreadChats)}
+        {link("/recordings", "Class recordings", "recordings")}
         <div className="nav-group">Website content</div>
         {SECTIONS.map((s) => link("/content/" + s.key, s.label, s.key))}
         <div className="nav-group">Account</div>
@@ -164,6 +169,10 @@ export default function AdminApp() {
             <Route path="/orders" element={<Orders />} />
             <Route path="/orders/:id" element={<Orders />} />
             <Route path="/messages" element={<Messages />} />
+            <Route path="/chats" element={<Chats />} />
+            <Route path="/chats/:id" element={<Chats />} />
+            <Route path="/recordings" element={<Recordings />} />
+            <Route path="/recordings/:course" element={<Recordings />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/content/:key" element={<ContentRoute />} />
             <Route path="/content/:key/:ref" element={<ContentRoute item />} />
@@ -171,6 +180,7 @@ export default function AdminApp() {
           </Routes>
         </div>
       </div>
+      <CallCenter />
       {toastEl}
     </AdminCtx.Provider>
   );
