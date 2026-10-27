@@ -11,7 +11,7 @@
     "set-password": "node server.js --set-password"
   },
   "engines": {
-    "node": ">=16"
+    "node": ">=18"
   },
   "dependencies": {
     "express": "^4.21.2",
@@ -23,8 +23,8 @@
     "@anthropic-ai/sdk": "^0.129.0"
   },
   "devDependencies": {
-    "@vitejs/plugin-react": "^4.2.1",
+    "@vitejs/plugin-react": "5.0.0",
     "concurrently": "^8.2.2",
-    "vite": "^4.5.14"
+    "vite": "6.0.0"
   }
 }
