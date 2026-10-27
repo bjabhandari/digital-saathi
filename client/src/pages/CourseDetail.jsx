@@ -5,6 +5,7 @@ import { useContent, useTeacher } from "../context/ContentContext.jsx";
 import { AddToCartButton, NotFoundBlock, OfferBox, Stack3d, TeacherAvatar, useTitle, useWhatsApp } from "../components/ui.jsx";
 import { CourseCard } from "../components/cards.jsx";
 import Shapes3D from "../components/Shapes3D.jsx";
+import CourseRecordings from "../components/CourseRecordings.jsx";
 
 export default function CourseDetail() {
   const { id } = useParams();
@@ -86,6 +87,8 @@ function Course({ c, all }) {
           </aside>
         </div>
       </section>
+
+      <CourseRecordings course={c} />
 
       {related.length ? (
         <section className="section section--soft">

@@ -5,7 +5,7 @@
   "description": "Digital Saathi website (React) with admin panel, order tracking and help chat",
   "main": "server.js",
   "scripts": {
-    "dev": "concurrently -k -n api,web -c green,cyan \"node server.js\" \"vite\"",
+    "dev": "concurrently -k -n api,web -c green,cyan \"nodemon --watch server.js server.js\" \"vite\"",
     "build": "vite build",
     "start": "node server.js",
     "set-password": "node server.js --set-password"
@@ -25,6 +25,7 @@
   "devDependencies": {
     "@vitejs/plugin-react": "5.0.0",
     "concurrently": "^8.2.2",
+    "nodemon": "^3.1.4",
     "vite": "6.0.0"
   }
 }

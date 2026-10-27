@@ -5,6 +5,7 @@ import { useContent } from "../context/ContentContext.jsx";
 import { NotFoundBlock, OfferBox, TeacherAvatar, Timer, useTitle, useWhatsApp } from "../components/ui.jsx";
 import { CourseCard } from "../components/cards.jsx";
 import Shapes3D from "../components/Shapes3D.jsx";
+import DemoVideo from "../components/DemoVideo.jsx";
 
 export default function TeacherDetail() {
   const { id } = useParams();
@@ -51,6 +52,8 @@ export default function TeacherDetail() {
 
       <section className="section"><div className="container detail-grid">
         <div>
+          <h2 className="detail-h2 reveal">Demo class with {first}</h2>
+          <div className="reveal"><DemoVideo teacher={t} /></div>
           <h2 className="detail-h2 reveal">Highlights</h2>
           <ul className="feature-list reveal">{(t.highlights || []).map((h, i) => <li key={i}><Icon name="award" /><span>{h}</span></li>)}</ul>
           {(t.reviews || []).length ? (

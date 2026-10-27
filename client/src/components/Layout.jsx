@@ -9,6 +9,7 @@ import { useCart } from "../context/CartContext.jsx";
 import { useToast } from "../context/ToastContext.jsx";
 import { Timer, useWhatsApp } from "./ui.jsx";
 import ChatWidget from "../chat/ChatWidget.jsx";
+import OfferIntro from "./OfferIntro.jsx";
 
 const NAV = [
   ["/", "Home"],
@@ -112,7 +113,7 @@ function Header() {
 }
 
 function Footer() {
-  const { SITE } = useContent();
+  const { SITE, CHATBOT } = useContent();
   const toast = useToast();
   const wa = useWhatsApp();
   const subscribe = (e) => {
@@ -173,7 +174,8 @@ function Footer() {
           </div>
         </div>
       </footer>
-      <a className="wa-float" href={wa("Namaste Digital Saathi! I have a question.")} target="_blank" rel="noopener noreferrer" aria-label="Chat on WhatsApp"><Icon name="whatsapp" /></a>
+      {/* WhatsApp lives inside the help chat; show the separate button only when the chat is off */}
+      {CHATBOT && CHATBOT.enabled === false ? <a className="wa-float" href={wa("Namaste Digital Saathi! I have a question.")} target="_blank" rel="noopener noreferrer" aria-label="Chat on WhatsApp"><Icon name="whatsapp" /></a> : null}
     </>
   );
 }
@@ -207,6 +209,7 @@ export default function Layout() {
       <main key={pathname} ref={mainRef} className="page-enter"><Outlet /></main>
       <Footer />
       <ChatWidget />
+      <OfferIntro />
     </>
   );
 }

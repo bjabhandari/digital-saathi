@@ -3,10 +3,14 @@
    questions to Claude when the server has AI chat enabled.
    Bot replies are HTML built from escaped text only. */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { CallScreen, VoiceRecorder } from "./Voice.jsx";
+import { canCall, canRecord, mmss } from "../lib/rtc.js";
+import { setSoundOn, sfx, soundOn } from "../lib/sfx.js";
 import { useNavigate } from "react-router-dom";
 import { Icon } from "../lib/icons.jsx";
 import { MyOrders, api, legacyToRoute, npr, waLink } from "../lib/util.js";
 import { useContent } from "../context/ContentContext.jsx";
+import { TeacherAvatar } from "../components/ui.jsx";
 
 const HISTORY_KEY = "ds_chat_v1";
 const esc = (v) => String(v == null ? "" : v).replace(/[&<>"']/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]));
@@ -170,8 +174,57 @@ function makeBot(c, state) {
   return { ruleReply, humanAnswer, fallback };
 }
 
+// Each visit's conversation gets an ID; every exchange is logged to the server
+// (shown in Admin → Live chats and forwarded to the owner's WhatsApp)
+const ID_CHARS = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
+function chatId() {
+  let id = null;
+  try { id = sessionStorage.getItem("ds_chat_id"); } catch (e) { /* storage unavailable */ }
+  if (!id) {
+    id = "C-" + Array.from(crypto.getRandomValues(new Uint8Array(6)), (b) => ID_CHARS[b % ID_CHARS.length]).join("");
+    try { sessionStorage.setItem("ds_chat_id", id); } catch (e) { /* storage unavailable */ }
+  }
+  return id;
+}
+function logExchange(messages) {
+  let returning = false;
+  try { returning = Boolean(localStorage.getItem("ds_chat_seen")); localStorage.setItem("ds_chat_seen", "1"); } catch (e) { /* storage unavailable */ }
+  const ref = document.referrer && !document.referrer.startsWith(window.location.origin) ? document.referrer : "";
+  api("/api/chat/log", {
+    id: chatId(), messages, returning, referrer: ref,
+    page: window.location.pathname + window.location.search,
+    lang: navigator.language, screen: window.innerWidth + "x" + window.innerHeight
+  }).catch(() => { /* logging is best-effort */ });
+}
+
 function loadHistory() {
-  try { return JSON.parse(sessionStorage.getItem(HISTORY_KEY)) || []; } catch (e) { return []; }
+  // Recorded audio (blob: URLs) doesn't survive a reload; keep the bubble without the player
+  try { return (JSON.parse(sessionStorage.getItem(HISTORY_KEY)) || []).map((m) => (m.voice ? { ...m, voice: { ...m.voice, src: "" } } : m)); } catch (e) { return []; }
+}
+
+/* Voice note bubble: play/pause, waveform with progress and time */
+function VoiceBubble({ src, duration }) {
+  const audio = useRef(null);
+  const [playing, setPlaying] = useState(false);
+  const [pos, setPos] = useState(0);
+  const bars = useMemo(() => {
+    let x = Math.round(duration * 97) || 7;
+    return Array.from({ length: 28 }, () => { x = (x * 9301 + 49297) % 233280; return 0.25 + (x / 233280) * 0.75; });
+  }, [duration]);
+  const toggle = () => {
+    const a = audio.current;
+    if (!a) return;
+    if (a.paused) a.play().catch(() => {}); else a.pause();
+  };
+  const pct = duration ? Math.min(1, pos / duration) : 0;
+  return (
+    <div className="vnote">
+      {src ? <audio ref={audio} src={src} preload="metadata" onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)} onEnded={() => { setPlaying(false); setPos(0); }} onTimeUpdate={(e) => setPos(e.target.currentTime)} /> : null}
+      <button type="button" className="vnote-play" onClick={toggle} disabled={!src} aria-label={playing ? "Pause" : "Play voice message"}><Icon name={playing ? "pause" : "play"} /></button>
+      <span className="vnote-wave" aria-hidden="true">{bars.map((h, i) => <i key={i} className={i / bars.length < pct ? "on" : ""} style={{ height: h * 100 + "%" }} />)}</span>
+      <span className="vnote-time">{mmss(playing || pos ? pos : duration)}</span>
+    </div>
+  );
 }
 
 export default function ChatWidget() {
@@ -186,6 +239,13 @@ export default function ChatWidget() {
   const [dot, setDot] = useState(() => !loadHistory().length);
   const [typing, setTyping] = useState(false);
   const [input, setInput] = useState("");
+  const [mode, setMode] = useState("text"); // text | record | call
+  const [teaser, setTeaser] = useState(false);
+  const [sound, setSound] = useState(soundOn);
+  const toggleSound = () => { const on = !sound; setSound(on); setSoundOn(on); if (on) sfx.receive(); };
+  // Calls and voice notes need the Digital Saathi server (not available on static hosting)
+  const voiceOk = content.live && canRecord();
+  const callOk = content.live && canCall();
   const state = useRef({ awaitingPhoneFor: null, ai: false, busy: false });
   const historyRef = useRef(history);
   const body = useRef();
@@ -197,6 +257,17 @@ export default function ChatWidget() {
     try { sessionStorage.setItem(HISTORY_KEY, JSON.stringify(history.slice(-40))); } catch (e) { /* storage unavailable */ }
     if (body.current) body.current.scrollTop = body.current.scrollHeight;
   }, [history, typing]);
+
+  // A small "Need help?" bubble next to the launcher, once per visit
+  useEffect(() => {
+    let seen = false;
+    try { seen = Boolean(sessionStorage.getItem("ds_chat_teaser")); } catch (e) { /* storage unavailable */ }
+    if (seen || historyRef.current.some((m) => m.me)) return undefined; // already chatted this visit
+    const t = setTimeout(() => setTeaser(true), 6000);
+    return () => clearTimeout(t);
+  }, []);
+  const dismissTeaser = () => { setTeaser(false); try { sessionStorage.setItem("ds_chat_teaser", "1"); } catch (e) { /* storage unavailable */ } };
+  useEffect(() => { if (open && teaser) dismissTeaser(); }, [open, teaser]);
 
   useEffect(() => {
     if (BOT.enabled === false) return undefined;
@@ -241,15 +312,16 @@ export default function ChatWidget() {
     return local || bot.fallback(raw);
   }, [bot]);
 
-  const htmlToText = (html) => { const d = document.createElement("div"); d.innerHTML = html; return d.textContent; };
+  const htmlToText = (html) => { const d = document.createElement("div"); d.innerHTML = html.replace(/<br\s*\/?>/gi, "\n"); return d.textContent; };
 
   const send = useCallback(async (raw) => {
     const text = raw.trim();
     if (!text || state.current.busy) return;
     state.current.busy = true;
-    const userMsg = { html: esc(text), me: true, text };
+    const userMsg = { html: esc(text), me: true, text, at: Date.now() };
     historyRef.current = historyRef.current.concat(userMsg);
     setHistory(historyRef.current);
+    sfx.send();
     setInput("");
     setTyping(true);
     const started = Date.now();
@@ -257,15 +329,34 @@ export default function ChatWidget() {
     try { html = await reply(text); } catch (e) { html = "Something went wrong — please try again."; }
     await new Promise((r) => setTimeout(r, Math.max(0, 500 - (Date.now() - started))));
     setTyping(false);
-    setHistory((h) => h.concat({ html, me: false, text: htmlToText(html) }));
+    const botText = htmlToText(html);
+    setHistory((h) => h.concat({ html, me: false, text: botText, at: Date.now() }));
+    sfx.receive();
+    logExchange([{ me: true, text }, { me: false, text: botText }]);
     state.current.busy = false;
     if (inputEl.current) inputEl.current.focus();
   }, [reply]);
 
+  const botSay = useCallback((html) => { setHistory((h) => h.concat({ html, me: false, text: htmlToText(html), at: Date.now() })); sfx.receive(); }, []);
+  const onVoiceSent = useCallback((src, duration) => {
+    setMode("text");
+    sfx.voice();
+    setHistory((h) => h.concat({ me: true, at: Date.now(), voice: { src, duration }, html: "🎤 Voice message · " + mmss(duration), text: "🎤 Voice message (" + mmss(duration) + ")" }));
+    setTimeout(() => botSay("Thanks! 🎧 The team got your voice message and will reply soon. Want a call back? Share your phone number here."), 700);
+  }, [botSay]);
+  const onVoiceError = useCallback((msg) => { setMode("text"); botSay(esc(msg)); }, [botSay]);
+  const onCallLog = useCallback((st) => {
+    const line = st === "missed" ? "📞 Missed call" : st === "declined" ? "📞 Call declined" : "📞 Call ended";
+    setHistory((h) => h.concat({ me: true, html: line, text: line, call: true, at: Date.now() }));
+  }, []);
+
   const quick = (q) => {
     if (/talk to a human/i.test(q)) {
       const html = bot.humanAnswer();
-      setHistory((h) => h.concat({ html: esc(q), me: true, text: q }, { html, me: false, text: htmlToText(html) }));
+      setHistory((h) => h.concat({ html: esc(q), me: true, text: q, at: Date.now() }));
+      sfx.send();
+      setTimeout(() => { setHistory((h) => h.concat({ html, me: false, text: htmlToText(html), at: Date.now() })); sfx.receive(); }, 600);
+      logExchange([{ me: true, text: q }, { me: false, text: htmlToText(html) }]);
       return;
     }
     send(q);
@@ -285,31 +376,99 @@ export default function ChatWidget() {
 
   if (BOT.enabled === false) return null;
 
+  const fresh = history.length === 1 && !history[0].me;
+  const team = (content.TEACHERS || []).slice(0, 3);
+  const waHref = waLink(content.SITE.whatsapp, "Namaste Digital Saathi! I have a question.");
+  const focusInput = () => { setMode("text"); setTimeout(() => inputEl.current && inputEl.current.focus(), 50); };
+  const time = (at) => (at ? new Date(at).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }) : "");
+
   return (
     <>
-      <button className="chat-launch" aria-label="Open help chat" aria-expanded={open} onClick={() => setOpen(true)}>
-        <Icon name="chat" />{dot ? <span className="dot" /> : null}
+      {!open && teaser ? (
+        <div className="chat-teaser" role="status">
+          <button className="chat-teaser-x" aria-label="Dismiss" onClick={dismissTeaser}><Icon name="x" /></button>
+          <button className="chat-teaser-body" onClick={() => { dismissTeaser(); setOpen(true); }}>
+            <span className="chat-teaser-avatars">{team.map((t) => <TeacherAvatar key={t.id} teacher={t} />)}</span>
+            <span><b>Namaste! 👋</b> Chat, call or send a voice note. We reply in seconds.</span>
+          </button>
+        </div>
+      ) : null}
+      <button className={"chat-launch" + (open ? " is-open" : "")} aria-label={open ? "Close help chat" : "Open help chat"} aria-expanded={open} onClick={() => setOpen(!open)}>
+        <span className="chat-launch-icon chat-launch-icon--chat"><Icon name="chat" /></span>
+        <span className="chat-launch-icon chat-launch-icon--x"><Icon name="x" /></span>
+        {dot && !open ? <span className="dot" /> : null}
       </button>
       <section className="chat-panel" aria-label="Help chat">
-        <div className="chat-head">
-          <span className="avatar"><Icon name="sparkles" /></span>
-          <div><b>{BOT.name || "Saathi"} · Help</b><small>Online — replies instantly</small></div>
-          <button className="chat-close" aria-label="Close chat" onClick={() => setOpen(false)}><Icon name="x" /></button>
-        </div>
+        <header className="chat-head">
+          <span className="chat-head-glow" aria-hidden="true" />
+          <span className="chat-team" aria-hidden="true">
+            {team.map((t) => <TeacherAvatar key={t.id} teacher={t} />)}
+            <span className="chat-team-bot"><Icon name="sparkles" /></span>
+          </span>
+          <div className="chat-head-text"><b>Digital Saathi</b><small><i className="chat-online" /> Online now</small></div>
+          <div className="chat-head-actions">
+            {callOk ? <button className="chat-hbtn chat-hbtn--call" aria-label="Audio call" title="Audio call" onClick={() => setMode("call")} disabled={mode === "call"}><Icon name="phoneCall" /></button> : null}
+            <button className="chat-hbtn" aria-label={sound ? "Mute chat sounds" : "Turn on chat sounds"} aria-pressed={!sound} title={sound ? "Sounds on" : "Sounds off"} onClick={toggleSound}><Icon name={sound ? "volume" : "volumeOff"} /></button>
+            <a className="chat-hbtn chat-hbtn--wa" href={waHref} target="_blank" rel="noopener noreferrer" aria-label="Chat on WhatsApp" title="WhatsApp"><Icon name="whatsapp" /></a>
+            <button className="chat-hbtn" aria-label="Close chat" onClick={() => setOpen(false)}><Icon name="x" /></button>
+          </div>
+        </header>
+        <div className="chat-main">
+        {mode === "call" ? <CallScreen chatId={chatId()} onClose={() => setMode("text")} onVoiceMessage={() => setMode("record")} onLog={onCallLog} /> : null}
         <div className="chat-body" aria-live="polite" ref={body} onClick={onBodyClick}>
-          {history.map((m, i) => (
-            <div key={i} className={"chat-msg " + (m.me ? "chat-msg--me" : "chat-msg--bot")} dangerouslySetInnerHTML={{ __html: m.html }} />
-          ))}
-          {typing ? <div className="chat-msg chat-msg--bot chat-typing"><i /><i /><i /></div> : null}
+          {history.map((m, i) => {
+            const prev = history[i - 1], next = history[i + 1];
+            const firstOfGroup = !prev || prev.me !== m.me;
+            const lastOfGroup = !next || next.me !== m.me;
+            const cls = "chat-row" + (m.me ? " chat-row--me" : " chat-row--bot") + (firstOfGroup ? " first" : "") + (lastOfGroup ? " last" : "");
+            return (
+              <div key={i} className={cls}>
+                {!m.me ? <span className="chat-row-avatar" aria-hidden="true">{lastOfGroup ? <Icon name="sparkles" /> : null}</span> : null}
+                <div className="chat-row-main">
+                  {m.voice ? (
+                    <div className="chat-msg chat-msg--me chat-voice"><VoiceBubble src={m.voice.src} duration={m.voice.duration} /></div>
+                  ) : (
+                    <div className={"chat-msg " + (m.me ? "chat-msg--me" : "chat-msg--bot") + (m.call ? " chat-callog" : "")} dangerouslySetInnerHTML={{ __html: m.html }} />
+                  )}
+                  {lastOfGroup && m.at ? <span className="chat-time">{m.me ? <>{time(m.at)} <i className="chat-ticks">✓✓</i></> : (BOT.name || "Saathi") + " · " + time(m.at)}</span> : null}
+                </div>
+              </div>
+            );
+          })}
+          {fresh ? (
+            <div className="chat-welcome">
+              <h3>How can we help you today?</h3>
+              <div className="chat-tiles">
+                <button type="button" style={{ "--i": 0 }} onClick={focusInput}><span className="ct-ic ct-ic--chat"><Icon name="chat" /></span><b>Ask a question</b><small>Instant answers</small></button>
+                {callOk ? <button type="button" style={{ "--i": 1 }} onClick={() => setMode("call")}><span className="ct-ic ct-ic--call"><Icon name="phoneCall" /></span><b>Call us</b><small>Talk in your browser</small></button> : null}
+                {voiceOk ? <button type="button" style={{ "--i": 2 }} onClick={() => { sfx.tick(); setMode("record"); }}><span className="ct-ic ct-ic--mic"><Icon name="mic" /></span><b>Voice message</b><small>Up to 3 minutes</small></button> : null}
+                <button type="button" style={{ "--i": 3 }} onClick={() => send("Track my order")}><span className="ct-ic ct-ic--box"><Icon name="package" /></span><b>Track order</b><small>See live progress</small></button>
+              </div>
+              <a className="chat-wa-row" href={waHref} target="_blank" rel="noopener noreferrer"><Icon name="whatsapp" /> Prefer WhatsApp? Message us there <span>→</span></a>
+            </div>
+          ) : null}
+          {typing ? <div className="chat-row chat-row--bot first last"><span className="chat-row-avatar"><Icon name="sparkles" /></span><div className="chat-msg chat-msg--bot chat-typing"><i /><i /><i /></div></div> : null}
         </div>
-        <div className="chat-quick">
-          {(BOT.quickReplies || []).map((q) => <button key={q} type="button" onClick={() => quick(q)}>{q}</button>)}
+        {mode !== "record" && !fresh ? (
+          <div className="chat-quick">
+            {(BOT.quickReplies || []).map((q, i) => <button key={q} type="button" style={{ "--i": i }} onClick={() => quick(q)}>{q}</button>)}
+          </div>
+        ) : null}
+        {mode === "record" ? (
+          <div className="chat-form chat-form--rec"><VoiceRecorder chatId={chatId()} onSent={onVoiceSent} onCancel={() => setMode("text")} onError={onVoiceError} /></div>
+        ) : (
+          <form className="chat-form" onSubmit={(e) => { e.preventDefault(); send(input); }}>
+            <label className="sr-only" htmlFor="chat-input">Your message</label>
+            <div className="chat-input-wrap">
+              <input id="chat-input" ref={inputEl} autoComplete="off" maxLength={500} placeholder="Type a message…" value={input} onChange={(e) => setInput(e.target.value)} />
+            </div>
+            {voiceOk && !input.trim()
+              ? <button type="button" key="mic" className="chat-send chat-send--mic" aria-label="Record a voice message" onClick={() => { sfx.tick(); setMode("record"); }}><Icon name="mic" /></button>
+              : <button key="send" className="chat-send" aria-label="Send" disabled={!input.trim()}><Icon name="send" /></button>}
+          </form>
+        )}
+        <div className="chat-foot"><Icon name="lock" /> Chat, call or voice note · we usually reply in minutes</div>
         </div>
-        <form className="chat-form" onSubmit={(e) => { e.preventDefault(); send(input); }}>
-          <label className="sr-only" htmlFor="chat-input">Your message</label>
-          <input id="chat-input" ref={inputEl} autoComplete="off" maxLength={500} placeholder="Ask about services, prices, orders…" value={input} onChange={(e) => setInput(e.target.value)} />
-          <button aria-label="Send"><Icon name="send" /></button>
-        </form>
       </section>
     </>
   );
