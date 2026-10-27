@@ -13,7 +13,11 @@ export function ContentProvider({ children }) {
     let done = false;
     const fallback = setTimeout(() => { if (!done) { done = true; setState({ content: seed, live: false }); } }, 4000);
     api("/api/content")
-      .then((content) => { if (!done) { done = true; setState({ content: { ...seed, ...content }, live: true }); } })
+      .then((content) => {
+        // Static hosting (e.g. Cloudflare Pages) answers /api/* with the HTML page, not content
+        if (!content || !content.SITE) throw new Error("No API");
+        if (!done) { done = true; setState({ content: { ...seed, ...content }, live: true }); }
+      })
       .catch(() => { if (!done) { done = true; setState({ content: seed, live: false }); } })
       .finally(() => clearTimeout(fallback));
     return () => clearTimeout(fallback);
@@ -21,7 +25,7 @@ export function ContentProvider({ children }) {
 
   // Live updates: refetch when the admin saves content; reload after a new build
   useEffect(() => {
-    if (typeof EventSource === "undefined") return;
+    if (typeof EventSource === "undefined" || !state.live) return undefined;
     const es = new EventSource(API_BASE + "/api/live");
     let build = null, connected = false;
     const refetch = () => api("/api/content").then((content) => setState({ content: { ...seed, ...content }, live: true })).catch(() => {});
@@ -40,7 +44,7 @@ export function ContentProvider({ children }) {
     // Class recordings changed in the admin: course pages listen for this
     es.addEventListener("recordings", (e) => window.dispatchEvent(new CustomEvent("ds:recordings", { detail: JSON.parse(e.data) })));
     return () => es.close();
-  }, []);
+  }, [state.live]);
 
   if (!state.content) return <div className="app-loading" aria-busy="true"><img src="/assets/img/wordmark.png" alt="Digital Saathi" width="120" /></div>;
   return <ContentContext.Provider value={{ ...state.content, live: state.live }}>{children}</ContentContext.Provider>;

@@ -243,8 +243,9 @@ export default function ChatWidget() {
   const [teaser, setTeaser] = useState(false);
   const [sound, setSound] = useState(soundOn);
   const toggleSound = () => { const on = !sound; setSound(on); setSoundOn(on); if (on) sfx.receive(); };
-  const [voiceOk] = useState(canRecord);
-  const [callOk] = useState(canCall);
+  // Calls and voice notes need the Digital Saathi server (not available on static hosting)
+  const voiceOk = content.live && canRecord();
+  const callOk = content.live && canCall();
   const state = useRef({ awaitingPhoneFor: null, ai: false, busy: false });
   const historyRef = useRef(history);
   const body = useRef();
