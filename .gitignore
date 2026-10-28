@@ -1,7 +1,8 @@
 .DS_Store
 *.log
 node_modules/
-data/
-uploads/
+/data/
+/uploads/
 .env
 dist/
+.wrangler/

@@ -36,7 +36,8 @@ export function ContentProvider({ children }) {
     };
     es.addEventListener("hello", (e) => {
       checkBuild(e);
-      if (connected) refetch(); // reconnected after a server restart: catch up on missed changes
+      // Reconnected after a server restart: catch up on missed changes (a resumed stream replays them itself)
+      if (connected && !JSON.parse(e.data).resume) refetch();
       connected = true;
     });
     es.addEventListener("build", checkBuild);

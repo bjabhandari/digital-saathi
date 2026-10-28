@@ -23,7 +23,8 @@ export function VoiceRecorder({ chatId, onSent, onCancel, onError }) {
       if (cancelled) { stopStream(s); return; }
       stream = s;
       const type = audioType();
-      recorder = new MediaRecorder(stream, type ? { mimeType: type } : undefined);
+      // 48 kbps keeps a 3-minute note around 1 MB (fits every hosting option)
+      recorder = new MediaRecorder(stream, { ...(type ? { mimeType: type } : {}), audioBitsPerSecond: 48000 });
       recorder.ondataavailable = (e) => { if (e.data.size) chunks.push(e.data); };
       recorder.start(250);
       // Live level meter

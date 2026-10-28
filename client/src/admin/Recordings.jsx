@@ -49,7 +49,8 @@ export default function Recordings() {
 }
 
 function CourseEditor({ c, initial, onSaved }) {
-  const { toast, setDirty, dirtyFlag } = useAdmin();
+  const { toast, setDirty, dirtyFlag, platform } = useAdmin();
+  const canUpload = platform !== "cloudflare"; // Cloudflare hosting: class videos are links
   const navigate = useGuardedNavigate();
   const [list, setList] = useState(() => withKeys(clone(initial)));
   const [uploads, setUploads] = useState({}); // _k → { pct, xhr }
@@ -63,7 +64,7 @@ function CourseEditor({ c, initial, onSaved }) {
 
   const addDay = () => {
     const day = list.reduce((m, r) => Math.max(m, Number(r.day) || 0), 0) + 1;
-    const row = { _k: ++keySeq, day, title: "", date: today(), duration: "", summary: "", free: day === 1, source: "upload" };
+    const row = { _k: ++keySeq, day, title: "", date: today(), duration: "", summary: "", free: day === 1, source: canUpload ? "upload" : "link" };
     change(list.concat(row));
     setOpenKey(row._k);
     setTimeout(() => { const el = listRef.current && listRef.current.lastElementChild; if (el) el.scrollIntoView({ behavior: "smooth", block: "center" }); }, 50);
@@ -147,10 +148,10 @@ function CourseEditor({ c, initial, onSaved }) {
                 <div className="field">
                   <span className="field-label">Video</span>
                   <div className="filters" style={{ marginBottom: 0 }}>
-                    <button type="button" className={"chip" + (r.source === "upload" ? " active" : "")} onClick={() => update(r._k, { source: "upload" })}>Upload a file</button>
+                    {canUpload ? <button type="button" className={"chip" + (r.source === "upload" ? " active" : "")} onClick={() => update(r._k, { source: "upload" })}>Upload a file</button> : null}
                     <button type="button" className={"chip" + (r.source !== "upload" ? " active" : "")} onClick={() => update(r._k, { source: "link" })}>Paste a link</button>
                   </div>
-                  {r.source === "upload" ? (
+                  {r.source === "upload" && canUpload ? (
                     <div className="rec-drop">
                       {up ? (
                         <>

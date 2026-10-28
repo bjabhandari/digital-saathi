@@ -1,31 +1,13 @@
-/* Cloudflare Pages Function: forwards every /api/* request from the static
-   site (digitalsaathi.pages.dev) to the Digital Saathi Node server, so the
-   admin panel, live chats, calls, voice messages and orders work on this
-   domain too.
+/* Cloudflare Pages Function for every /api/* request on digitalsaathi.pages.dev.
+   - With a D1 database bound as DB: runs the Digital Saathi API right here
+     (cloudflare/api.js) — admin, orders, chats, calls, voice messages, alerts.
+   - Or, with API_ORIGIN set (e.g. a Railway server): forwards to that server.
+   Setup: Cloudflare → Workers & Pages → digitalsaathi → Settings →
+   Bindings → add D1 database "DB", and Variables → ADMIN_PASSWORD. */
+import { handleApi } from "../../cloudflare/api.js";
+import { forward } from "../../cloudflare/forward.js";
 
-   Set it up once in Cloudflare → Workers & Pages → digitalsaathi →
-   Settings → Variables and secrets:  API_ORIGIN = https://<your-server>
-   (for example your Railway address). Then redeploy. */
-
-export async function onRequest({ request, env }) {
-  const origin = (env.API_ORIGIN || "").replace(/\/+$/, "");
-  if (!origin) {
-    // No server connected yet: the site and admin show their "no server" messages
-    return new Response("The Digital Saathi server isn't connected to this site yet.", { status: 503, headers: { "Content-Type": "text/plain; charset=utf-8" } });
-  }
-  const url = new URL(request.url);
-  const target = origin + url.pathname + url.search;
-  const headers = new Headers(request.headers);
-  headers.set("X-Forwarded-Host", url.host);
-  headers.set("X-Forwarded-Proto", "https");
-  const ip = request.headers.get("CF-Connecting-IP");
-  if (ip) headers.set("X-Forwarded-For", ip);
-  const init = { method: request.method, headers, redirect: "manual" };
-  if (!["GET", "HEAD"].includes(request.method)) {
-    init.body = request.body; // streamed (video and voice uploads)
-    init.duplex = "half";
-  }
-  const res = await fetch(target, init);
-  // Pass the response straight through (keeps live streams and cookies working)
-  return new Response(res.body, { status: res.status, statusText: res.statusText, headers: res.headers });
+export async function onRequest({ request, env, waitUntil }) {
+  if (env.API_ORIGIN) return forward(request, env.API_ORIGIN);
+  return handleApi(request, env, { waitUntil });
 }

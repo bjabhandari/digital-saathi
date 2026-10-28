@@ -167,6 +167,21 @@ Use a persistent disk for `data/` and `uploads/`, and put it behind HTTPS.
 
 Without any API, the static site still works with the bundled content, but orders, tracking, messages and the admin panel need the server.
 
+## Deploy on Cloudflare Pages (no separate server)
+
+The site on Cloudflare Pages can run the whole backend itself (`functions/` + `cloudflare/api.js`) using a free **D1** database: admin panel, orders, live chats, voice messages, calls and WhatsApp alerts.
+
+One-time setup in the Cloudflare dashboard:
+
+1. **Storage & Databases → D1 SQL Database → Create** — name it `digital-saathi`.
+2. **Workers & Pages → digitalsaathi → Settings → Bindings → Add → D1 database**: variable name **`DB`**, database `digital-saathi`.
+3. **Settings → Variables and Secrets → Add**: `ADMIN_PASSWORD` (type *Secret*) = your admin password. It's used the first time you sign in; change it later in Admin → Settings.
+4. **Deployments → latest → Retry deployment** (bindings apply to new deployments).
+
+Then open `/admin` on the site. Tables are created automatically on first use.
+
+Limits compared to the Node server: live updates and call setup are polled (1–3 s delay), class videos are links (YouTube unlisted, Vimeo, Google Drive or .mp4), and voice messages / images are stored in D1 (up to ~1.9 MB each). Set `API_ORIGIN` instead of a D1 binding to forward `/api` to a Node server (e.g. Railway) and use that instead.
+
 ## Deploy on Railway (full site + server)
 
 Calls, voice messages, live chats, WhatsApp alerts, class recordings, orders and the admin panel need the Node server, so they don't work on static hosting such as Cloudflare Pages. Railway runs the whole thing:

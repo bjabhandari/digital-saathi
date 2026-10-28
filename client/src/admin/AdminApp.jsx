@@ -53,7 +53,7 @@ function Offline() {
         {local ? (
           <p className="muted">The admin panel needs the Digital Saathi server. Run "npm run dev" in the project folder, then open this page again.</p>
         ) : (
-          <p className="muted">This address only hosts the website files, so there's no server to sign in to. Open the admin panel on the address where the Digital Saathi server runs (for example your Railway address + /admin).</p>
+          <p className="muted">The admin panel isn't connected to its database yet. In Cloudflare, link a D1 database named DB and set ADMIN_PASSWORD (see the README), then open this page again.</p>
         )}
         <a className="muted small" href="/">← Back to website</a>
       </div>
@@ -103,6 +103,7 @@ function ContentRoute({ item }) {
 export default function AdminApp() {
   const [auth, setAuth] = useState("checking"); // checking | login | app | offline
   const [content, setContent] = useState(null);
+  const [platform, setPlatform] = useState("node"); // "cloudflare" when running as Pages Functions
   const [stats, setStats] = useState(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [toastState, setToastState] = useState({ text: "", err: false, show: false });
@@ -146,7 +147,7 @@ export default function AdminApp() {
 
   useEffect(() => {
     setUnauthorizedHandler(() => { setDirty(false); setAuth("login"); });
-    api("GET", "/api/admin/me").then((d) => (d.loggedIn ? showApp() : setAuth("login"))).catch(() => setAuth("offline"));
+    api("GET", "/api/admin/me").then((d) => { setPlatform(d.platform || "node"); if (d.loggedIn) showApp(); else setAuth("login"); }).catch(() => setAuth("offline"));
   }, [showApp, setDirty]);
 
   useEffect(() => {
@@ -166,9 +167,9 @@ export default function AdminApp() {
   const setSection = useCallback((key, value) => setContent((c) => ({ ...c, [key]: value })), []);
 
   const ctx = useMemo(() => ({
-    content, setSection, stats, refreshStats, toast, dirty, dirtyFlag, setDirty, confirmLeave,
+    content, setSection, stats, refreshStats, toast, dirty, dirtyFlag, setDirty, confirmLeave, platform,
     toggleMenu: () => setMenuOpen((o) => !o), logout
-  }), [content, setSection, stats, refreshStats, toast, dirtyFlag, setDirty, confirmLeave, logout]);
+  }), [content, setSection, stats, refreshStats, toast, dirtyFlag, setDirty, confirmLeave, logout, platform]);
 
   const toastEl = <div className={"toast" + (toastState.show ? " show" : "") + (toastState.err ? " err" : "")} role="status">{toastState.text}</div>;
 
