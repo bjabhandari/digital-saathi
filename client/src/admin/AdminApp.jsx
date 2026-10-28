@@ -12,22 +12,31 @@ import { CollectionList, ItemEditor, ValueEditor } from "./Content.jsx";
 
 function Login({ onLogin, onOffline }) {
   const [pw, setPw] = useState("");
+  const [show, setShow] = useState(false);
   const [err, setErr] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [shake, setShake] = useState(0);
   const submit = async (e) => {
     e.preventDefault();
-    setErr("");
-    try { await api("POST", "/api/admin/login", { password: pw }); setPw(""); onLogin(); } catch (ex) { if (ex.offline) onOffline(); else setErr(ex.message); }
+    setErr(""); setBusy(true);
+    try { await api("POST", "/api/admin/login", { password: pw }); setPw(""); onLogin(); }
+    catch (ex) { if (ex.offline) onOffline(); else { setErr(ex.message); setShake((n) => n + 1); } }
+    setBusy(false);
   };
   return (
     <section className="login">
-      <form className="login-card" onSubmit={submit}>
-        <img src="/assets/img/logo.png" alt="Digital Saathi" width="96" height="96" />
-        <h1>Admin panel</h1>
-        <p className="muted">Sign in to manage orders, messages and website content.</p>
+      <div className="login-aurora" aria-hidden="true"><i /><i /><i /><span className="login-grid" /></div>
+      <form className={"login-card" + (shake ? " shake-" + (shake % 2) : "")} onSubmit={submit}>
+        <span className="login-logo"><img src="/assets/img/logo.png" alt="Digital Saathi" width="88" height="88" /></span>
+        <h1>Welcome back</h1>
+        <p className="muted">Sign in to manage orders, live chats, classes and your website.</p>
         <label htmlFor="login-pw">Password</label>
-        <input id="login-pw" type="password" autoComplete="current-password" required autoFocus value={pw} onChange={(e) => setPw(e.target.value)} />
+        <div className="pw-field">
+          <input id="login-pw" type={show ? "text" : "password"} autoComplete="current-password" required autoFocus value={pw} onChange={(e) => setPw(e.target.value)} placeholder="Enter admin password" />
+          <button type="button" className="pw-toggle" onClick={() => setShow(!show)} aria-label={show ? "Hide password" : "Show password"}>{show ? "Hide" : "Show"}</button>
+        </div>
         <p className="error" role="alert">{err}</p>
-        <button className="btn btn--primary btn--block">Sign in</button>
+        <button className="btn btn--primary btn--block btn--lg" disabled={busy}>{busy ? <span className="spin" /> : null}{busy ? "Signing in…" : "Sign in"}</button>
         <a className="muted small" href="/">← Back to website</a>
       </form>
     </section>
@@ -75,6 +84,7 @@ function Sidebar({ open, stats, onLogout }) {
         {link("/settings", "Settings", "settings")}
       </nav>
       <div className="sidebar-foot">
+        <div className="me-chip"><span className="me-dot">DS</span><span><b>Admin</b><small><i className="live-dot" /> Online</small></span></div>
         <a href="/" target="_blank" rel="noopener noreferrer">View website ↗</a>
         <button type="button" onClick={onLogout}>Log out</button>
       </div>
@@ -170,6 +180,7 @@ export default function AdminApp() {
     <AdminCtx.Provider value={ctx}>
       <div className="app">
         <Sidebar open={menuOpen} stats={stats} onLogout={logout} />
+        {menuOpen ? <div className="sidebar-backdrop" onClick={() => setMenuOpen(false)} /> : null}
         <div className="main">
           <Routes>
             <Route path="/" element={<Dashboard />} />
