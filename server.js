@@ -15,11 +15,12 @@ const fs = require("fs");
 const path = require("path");
 
 const ROOT = __dirname;
-const DATA_DIR = path.join(ROOT, "data");
-const UPLOAD_DIR = path.join(ROOT, "uploads");
+// DATA_DIR / UPLOAD_DIR can point at a persistent volume when hosted (e.g. Railway)
+const DATA_DIR = process.env.DATA_DIR ? path.resolve(process.env.DATA_DIR) : path.join(ROOT, "data");
+const UPLOAD_DIR = process.env.UPLOAD_DIR ? path.resolve(process.env.UPLOAD_DIR) : path.join(ROOT, "uploads");
 const DIST_DIR = path.join(ROOT, "dist");
-const VIDEO_DIR = path.join(DATA_DIR, "videos");
-const VOICE_DIR = path.join(DATA_DIR, "voice"); // voice messages from the website chat (admin-only) // class recordings: private, streamed only to enrolled students
+const VIDEO_DIR = path.join(DATA_DIR, "videos"); // class recordings: private, streamed only to enrolled students
+const VOICE_DIR = path.join(DATA_DIR, "voice"); // voice messages from the website chat (admin-only)
 const SEED_FILE = path.join(ROOT, "seed", "content.json");
 const PORT = Number(process.env.PORT) || 8000;
 const SESSION_HOURS = 12;
@@ -214,7 +215,10 @@ function publicOrder(o) {
 /* ---------- App ---------- */
 const app = express();
 app.disable("x-powered-by");
-app.set("trust proxy", "loopback");
+// Behind a hosting proxy (Railway sets RAILWAY_ENVIRONMENT) trust one hop, so HTTPS
+// cookies and per-visitor rate limits use the real client; TRUST_PROXY overrides
+const TRUST = process.env.TRUST_PROXY || (process.env.RAILWAY_ENVIRONMENT ? "1" : "loopback");
+app.set("trust proxy", /^\d+$/.test(TRUST) ? Number(TRUST) : TRUST);
 app.use((req, res, next) => {
   res.set("X-Content-Type-Options", "nosniff");
   res.set("Referrer-Policy", "strict-origin-when-cross-origin");
@@ -229,7 +233,7 @@ if (CORS_ORIGINS.length) {
     if (origin && CORS_ORIGINS.includes(origin) && !req.path.startsWith("/admin")) {
       res.set("Access-Control-Allow-Origin", origin);
       res.set("Vary", "Origin");
-      res.set("Access-Control-Allow-Headers", "Content-Type");
+      res.set("Access-Control-Allow-Headers", "Content-Type, X-Access-Token");
       res.set("Access-Control-Allow-Methods", "GET, POST");
       if (req.method === "OPTIONS") return res.sendStatus(204);
     }

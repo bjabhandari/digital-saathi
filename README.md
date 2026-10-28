@@ -166,3 +166,17 @@ Use a persistent disk for `data/` and `uploads/`, and put it behind HTTPS.
 - configure the static host to serve `index.html` for all routes (and `admin.html` for `/admin/*`), or open the admin panel on the API server itself (`https://api.example.com/admin/`, after building there)
 
 Without any API, the static site still works with the bundled content, but orders, tracking, messages and the admin panel need the server.
+
+## Deploy on Railway (full site + server)
+
+Calls, voice messages, live chats, WhatsApp alerts, class recordings, orders and the admin panel need the Node server, so they don't work on static hosting such as Cloudflare Pages. Railway runs the whole thing:
+
+1. On [railway.com](https://railway.com) create a project → **Deploy from GitHub repo** → pick this repo (branch `main`). `railway.json` sets the build (`npm run build`) and start (`node server.js`) commands.
+2. Add a **Volume** to the service, mounted at `/app/storage`.
+3. In **Variables** add:
+   - `DATA_DIR=/app/storage/data`
+   - `UPLOAD_DIR=/app/storage/uploads`
+   - `ADMIN_PASSWORD=<your admin password>` (used on the very first start only)
+4. In **Settings → Networking** click **Generate Domain** (or add your own domain). Open it, then sign in at `/admin`.
+
+Every push to `main` redeploys. Chats, voice notes, recordings and settings live on the volume and survive redeploys.
