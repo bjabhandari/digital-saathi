@@ -29,6 +29,8 @@ export async function api(method, url, body) {
     headers: body !== undefined ? { "Content-Type": "application/json" } : {},
     body: body !== undefined ? JSON.stringify(body) : undefined
   });
+  // Static hosting (e.g. Cloudflare Pages) answers /api/* with the HTML page or 405: no server here
+  if (!(res.headers.get("content-type") || "").includes("json")) { const e = new Error("The Digital Saathi server isn't running at this address."); e.offline = true; throw e; }
   const data = await res.json().catch(() => ({}));
   if (res.status === 401 && !url.endsWith("/login")) { onUnauthorized(); throw new Error("Please log in again."); }
   if (!res.ok) throw new Error(data.error || "Request failed (" + res.status + ")");

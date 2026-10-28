@@ -10,13 +10,13 @@ import Recordings from "./Recordings.jsx";
 import Settings from "./Settings.jsx";
 import { CollectionList, ItemEditor, ValueEditor } from "./Content.jsx";
 
-function Login({ onLogin }) {
+function Login({ onLogin, onOffline }) {
   const [pw, setPw] = useState("");
   const [err, setErr] = useState("");
   const submit = async (e) => {
     e.preventDefault();
     setErr("");
-    try { await api("POST", "/api/admin/login", { password: pw }); setPw(""); onLogin(); } catch (ex) { setErr(ex.message); }
+    try { await api("POST", "/api/admin/login", { password: pw }); setPw(""); onLogin(); } catch (ex) { if (ex.offline) onOffline(); else setErr(ex.message); }
   };
   return (
     <section className="login">
@@ -35,11 +35,18 @@ function Login({ onLogin }) {
 }
 
 function Offline() {
+  const local = /^(localhost|127\.0\.0\.1)$/.test(window.location.hostname);
   return (
     <div className="login">
       <div className="login-card">
-        <h1>Server not running</h1>
-        <p className="muted">The admin panel needs the Digital Saathi server. Run "npm run dev" (or "npm start" after "npm run build") in the project folder, then open this page again.</p>
+        <img src="/assets/img/logo.png" alt="Digital Saathi" width="96" height="96" />
+        <h1>{local ? "Server not running" : "Admin isn't available here"}</h1>
+        {local ? (
+          <p className="muted">The admin panel needs the Digital Saathi server. Run "npm run dev" in the project folder, then open this page again.</p>
+        ) : (
+          <p className="muted">This address only hosts the website files, so there's no server to sign in to. Open the admin panel on the address where the Digital Saathi server runs (for example your Railway address + /admin).</p>
+        )}
+        <a className="muted small" href="/">← Back to website</a>
       </div>
     </div>
   );
@@ -157,7 +164,7 @@ export default function AdminApp() {
 
   if (auth === "checking") return null;
   if (auth === "offline") return <Offline />;
-  if (auth === "login") return <><Login onLogin={showApp} />{toastEl}</>;
+  if (auth === "login") return <><Login onLogin={showApp} onOffline={() => setAuth("offline")} />{toastEl}</>;
 
   return (
     <AdminCtx.Provider value={ctx}>
